@@ -43,9 +43,9 @@ defmodule AplicacionHackathon do
   defp mostrar_banner() do
     IO.puts("""
 
-    ╔════════════════════════════════════════════════════╗
-    ║                                                    ║
-    ║       HACKATHON CODE4FUTURE - SISTEMA 2025        ║
+   
+    ║
+    ║       HACKATHON CODE4FUTURE - SISTEMA 2025
     ║                                                    ║
     ║         Proyecto Final - Programación III         ║
     ║                                                    ║
@@ -55,30 +55,30 @@ defmodule AplicacionHackathon do
 
   # Inicializa todos los servicios del sistema
   defp inicializar_servicios() do
-    IO.puts("🚀 Iniciando servicios...")
+    IO.puts(" Iniciando servicios...")
 
     {:ok, _} = Almacenamiento.iniciar()
-    IO.puts("  ✓ Almacenamiento")
+    IO.puts("   Almacenamiento")
 
     {:ok, _} = ServicioParticipantes.iniciar()
-    IO.puts("  ✓ Servicio de Participantes")
+    IO.puts("   Servicio de Participantes")
 
     {:ok, _} = ServicioEquipos.iniciar()
-    IO.puts("  ✓ Servicio de Equipos")
+    IO.puts("   Servicio de Equipos")
 
     {:ok, _} = ServicioProyectos.iniciar()
-    IO.puts("  ✓ Servicio de Proyectos")
+    IO.puts("   Servicio de Proyectos")
 
     {:ok, _} = ServicioMentoria.iniciar()
-    IO.puts("  ✓ Servicio de Mentoría")
+    IO.puts("   Servicio de Mentoría")
 
     {:ok, _} = ServicioChat.iniciar()
-    IO.puts("  ✓ Servicio de Chat")
+    IO.puts("   Servicio de Chat")
   end
 
   # Carga datos de ejemplo para demostración
   defp cargar_datos_ejemplo() do
-    IO.puts("\n📦 Cargando datos de ejemplo...")
+    IO.puts("\n Cargando datos de ejemplo...")
 
     # Crear participantes
     ServicioParticipantes.solicitar_registrar("Juan Pérez", "juan@hackathon.com", :participante)
