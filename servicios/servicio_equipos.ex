@@ -59,8 +59,20 @@ defmodule Servicios.ServicioEquipos do
     # Verificar si ya existe un equipo con ese nombre
     case Almacenamiento.obtener_equipo(nombre) do
       nil ->
+        # Buscar al participante líder por nombre
+        participante = Almacenamiento.listar_participantes()
+                      |> Enum.find(fn p -> p.nombre == lider end)
+
+        # Crear el equipo
         equipo = Equipo.nuevo(nombre, tema, lider)
         Almacenamiento.guardar_equipo(equipo)
+
+        # Si el líder existe como participante, asignarle el equipo
+        if participante do
+          participante_actualizado = Dominio.Participante.asignar_equipo(participante, nombre)
+          Almacenamiento.guardar_participante(participante_actualizado)
+        end
+
         {:ok, equipo}
 
       _equipo ->
