@@ -74,13 +74,34 @@ defmodule Servicios.ServicioEquipos do
         {:error, "El equipo no existe"}
 
       equipo ->
-        case Equipo.agregar_miembro(equipo, nombre_miembro) do
-          {:ok, equipo_actualizado} ->
-            Almacenamiento.guardar_equipo(equipo_actualizado)
-            {:ok, "#{nombre_miembro} se unió al equipo"}
+        # Buscar al participante por nombre para verificar si ya tiene equipo
+        participante = Almacenamiento.listar_participantes()
+                      |> Enum.find(fn p -> p.nombre == nombre_miembro end)
 
-          {:error, msg} ->
-            {:error, msg}
+        cond do
+          participante == nil ->
+            {:error, "El participante no existe. Debe registrarse primero."}
+
+          participante.equipo != nil and participante.equipo != nombre_equipo ->
+            {:error, "Ya perteneces al equipo '#{participante.equipo}'. Usa /salir-equipo primero."}
+
+          nombre_miembro in equipo.miembros ->
+            {:error, "Este participante ya está en el equipo"}
+
+          true ->
+            case Equipo.agregar_miembro(equipo, nombre_miembro) do
+              {:ok, equipo_actualizado} ->
+                Almacenamiento.guardar_equipo(equipo_actualizado)
+                # Actualizar el participante con el equipo asignado
+                if participante do
+                  participante_actualizado = Dominio.Participante.asignar_equipo(participante, nombre_equipo)
+                  Almacenamiento.guardar_participante(participante_actualizado)
+                end
+                {:ok, "#{nombre_miembro} se unió al equipo"}
+
+              {:error, msg} ->
+                {:error, msg}
+            end
         end
     end
   end
@@ -94,6 +115,16 @@ defmodule Servicios.ServicioEquipos do
         case Equipo.remover_miembro(equipo, nombre_miembro) do
           {:ok, equipo_actualizado} ->
             Almacenamiento.guardar_equipo(equipo_actualizado)
+
+            # Desasignar el equipo del participante
+            participante = Almacenamiento.listar_participantes()
+                          |> Enum.find(fn p -> p.nombre == nombre_miembro end)
+
+            if participante do
+              participante_actualizado = Dominio.Participante.desasignar_equipo(participante)
+              Almacenamiento.guardar_participante(participante_actualizado)
+            end
+
             {:ok, "#{nombre_miembro} fue removido del equipo"}
 
           {:error, msg} ->

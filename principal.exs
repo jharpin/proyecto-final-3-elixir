@@ -141,6 +141,10 @@ defmodule AplicacionHackathon do
         manejar_listar_mentores()
         ciclo_principal()
 
+      {:salir_equipo, _} ->
+        manejar_salir_equipo()
+        ciclo_principal()
+
       {:desconocido, _} ->
         IO.puts(" Comando no reconocido. Usa /ayuda para ver los comandos disponibles.")
         ciclo_principal()
@@ -230,14 +234,21 @@ defmodule AplicacionHackathon do
   end
 
   defp manejar_unirse_equipo(nombre_equipo) do
-    nombre = IO.gets("\nIngresa tu nombre: ") |> String.trim()
+    correo = IO.gets("\nIngresa tu correo electrónico: ") |> String.trim()
 
-    case ServicioEquipos.solicitar_agregar_miembro(nombre_equipo, nombre) do
-      {:ok, msg} ->
-        IO.puts("\n #{msg}\n")
+    # Obtener el participante por correo
+    participante = ServicioParticipantes.solicitar_obtener(correo)
 
-      {:error, msg} ->
-        IO.puts("\n Error: #{msg}\n")
+    if participante == nil do
+      IO.puts("\n Error: No se encontró un participante con ese correo. Debes registrarte primero.\n")
+    else
+      case ServicioEquipos.solicitar_agregar_miembro(nombre_equipo, participante.nombre) do
+        {:ok, msg} ->
+          IO.puts("\n #{msg}\n")
+
+        {:error, msg} ->
+          IO.puts("\n Error: #{msg}\n")
+      end
     end
   end
 
@@ -337,6 +348,59 @@ defmodule AplicacionHackathon do
       end)
 
       IO.puts("")
+    end
+  end
+
+  defp manejar_salir_equipo() do
+    IO.puts("\n SALIR DEL EQUIPO")
+    IO.puts("--------------------")
+
+    correo = IO.gets("Ingresa tu correo electrónico: ") |> String.trim()
+
+    # Obtener el participante
+    participante = ServicioParticipantes.solicitar_obtener(correo)
+
+    if participante == nil do
+      IO.puts("\n Error: No se encontró un participante con ese correo.\n")
+    else
+      if participante.equipo == nil do
+        IO.puts("\n No perteneces a ningún equipo.\n")
+      else
+        # Confirmar
+        IO.puts("\nEstás a punto de salir del equipo: #{participante.equipo}")
+        confirmacion = IO.gets("¿Estás seguro? (si/no): ") |> String.trim() |> String.downcase()
+
+        if confirmacion == "si" or confirmacion == "s" do
+          # Remover del equipo
+          nombre_equipo = participante.equipo
+
+          case ServicioEquipos.solicitar_obtener(nombre_equipo) do
+            nil ->
+              IO.puts("\n Error: El equipo no existe.\n")
+
+            equipo ->
+              # Remover al miembro del equipo (esto también desasigna el equipo del participante)
+              case Dominio.Equipo.remover_miembro(equipo, participante.nombre) do
+                {:ok, equipo_actualizado} ->
+                  # Guardar equipo actualizado
+                  Almacenamiento.guardar_equipo(equipo_actualizado)
+
+                  # Desasignar equipo del participante
+                  case ServicioParticipantes.solicitar_desasignar_equipo(correo) do
+                    {:ok, msg} ->
+                      IO.puts("\n #{msg}\n")
+                    {:error, msg} ->
+                      IO.puts("\n Error: #{msg}\n")
+                  end
+
+                {:error, msg} ->
+                  IO.puts("\n Error: #{msg}\n")
+              end
+          end
+        else
+          IO.puts("\n Operación cancelada.\n")
+        end
+      end
     end
   end
 end

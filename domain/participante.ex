@@ -38,6 +38,13 @@ defmodule Dominio.Participante do
   end
 
   @doc """
+  Desasigna el equipo del participante
+  """
+  def desasignar_equipo(participante) do
+    %{participante | equipo: nil}
+  end
+
+  @doc """
   Agrega una habilidad al participante
   """
   def agregar_habilidad(participante, habilidad) do

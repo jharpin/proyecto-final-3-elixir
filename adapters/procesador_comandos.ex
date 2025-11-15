@@ -71,6 +71,16 @@ defmodule Adaptadores.ProcesadorComandos do
     {:listar_participantes, nil}
   end
 
+  # /usuarios - Alias para listar participantes (con equipos)
+  defp procesar_comando(["/usuarios"]) do
+    {:listar_participantes, nil}
+  end
+
+  # /salir-equipo - Salir del equipo actual
+  defp procesar_comando(["/salir-equipo"]) do
+    {:salir_equipo, nil}
+  end
+
   # /ayuda - Mostrar ayuda
   defp procesar_comando(["/ayuda"]) do
     {:ayuda, nil}
@@ -100,8 +110,11 @@ GESTION DE PARTICIPANTES:
   /registrar
         Registrarse en el sistema
 
-  /participantes
-        Ver todos los participantes
+  /participantes o /usuarios
+        Ver todos los participantes con sus equipos
+
+  /salir-equipo
+        Salir del equipo actual
 
 
 GESTION DE EQUIPOS:
