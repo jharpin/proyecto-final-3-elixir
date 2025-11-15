@@ -33,8 +33,8 @@ defmodule AplicacionHackathon do
     inicializar_servicios()
     cargar_datos_ejemplo()
 
-    IO.puts("\n✓ Sistema iniciado correctamente")
-    IO.puts("✓ Escribe /ayuda para ver los comandos disponibles\n")
+    IO.puts("\n Sistema iniciado correctamente")
+    IO.puts("Escribe /ayuda para ver los comandos disponibles\n")
 
     ciclo_principal()
   end
@@ -42,14 +42,9 @@ defmodule AplicacionHackathon do
   # Muestra el banner de bienvenida
   defp mostrar_banner() do
     IO.puts("""
+    Hacketon CODE4FUTURE
+    Proyecto Final - Programación 3
 
-   
-    ║
-    ║       HACKATHON CODE4FUTURE - SISTEMA 2025
-    ║                                                    ║
-    ║         Proyecto Final - Programación III         ║
-    ║                                                    ║
-    ╚════════════════════════════════════════════════════╝
     """)
   end
 
@@ -94,7 +89,7 @@ defmodule AplicacionHackathon do
     ServicioMentoria.solicitar_registrar("Dr. Carlos Ruiz", "carlos@hackathon.com", "Inteligencia Artificial")
     ServicioMentoria.solicitar_registrar("Ing. Ana López", "ana@hackathon.com", "Desarrollo Web")
 
-    IO.puts("  ✓ Datos de ejemplo cargados\n")
+    IO.puts(" Datos de ejemplo cargados\n")
   end
 
   # Ciclo principal que procesa comandos del usuario
@@ -103,7 +98,7 @@ defmodule AplicacionHackathon do
 
     case ProcesadorComandos.parsear(entrada) do
       {:salir, _} ->
-        IO.puts("\n👋 ¡Hasta luego! Gracias por usar el sistema.\n")
+        IO.puts("\n Gracias por usar el sistema.\n")
         :ok
 
       {:ayuda, _} ->
@@ -147,11 +142,11 @@ defmodule AplicacionHackathon do
         ciclo_principal()
 
       {:desconocido, _} ->
-        IO.puts("❌ Comando no reconocido. Usa /ayuda para ver los comandos disponibles.")
+        IO.puts(" Comando no reconocido. Usa /ayuda para ver los comandos disponibles.")
         ciclo_principal()
 
       {:error, msg} ->
-        IO.puts("❌ Error: #{msg}")
+        IO.puts(" Error: #{msg}")
         ciclo_principal()
     end
   end
@@ -159,8 +154,8 @@ defmodule AplicacionHackathon do
   # ========== MANEJADORES DE COMANDOS ==========
 
   defp manejar_registro() do
-    IO.puts("\n📝 REGISTRO DE PARTICIPANTE")
-    IO.puts("═══════════════════════════")
+    IO.puts("\n REGISTRO DE PARTICIPANTE")
+    IO.puts("--------------------")
 
     nombre = IO.gets("Nombre completo: ") |> String.trim()
     correo = IO.gets("Correo electrónico: ") |> String.trim()
@@ -174,10 +169,10 @@ defmodule AplicacionHackathon do
 
     case ServicioParticipantes.solicitar_registrar(nombre, correo, rol) do
       {:ok, _participante} ->
-        IO.puts("\n✅ ¡Registro exitoso! Bienvenido #{nombre}\n")
+        IO.puts("\n Registro exitoso, Bienvenido #{nombre}\n")
 
       {:error, msg} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     end
   end
 
@@ -185,16 +180,15 @@ defmodule AplicacionHackathon do
     participantes = ServicioParticipantes.solicitar_listar()
 
     if Enum.empty?(participantes) do
-      IO.puts("\n📋 No hay participantes registrados.\n")
+      IO.puts("\n No hay participantes registrados.\n")
     else
-      IO.puts("\n📋 PARTICIPANTES REGISTRADOS")
-      IO.puts("═══════════════════════════════════")
+      IO.puts("\n PARTICIPANTES REGISTRADOS\n -------")
 
       Enum.each(participantes, fn p ->
         equipo = if p.equipo, do: p.equipo, else: "Sin equipo"
         IO.puts("• #{p.nombre} (#{p.correo})")
         IO.puts("  Rol: #{p.rol} | Equipo: #{equipo}")
-        IO.puts("  ───────────────────────────────")
+        IO.puts(" -------")
       end)
 
       IO.puts("")
@@ -205,17 +199,17 @@ defmodule AplicacionHackathon do
     equipos = ServicioEquipos.solicitar_listar()
 
     if Enum.empty?(equipos) do
-      IO.puts("\n📋 No hay equipos registrados.\n")
+      IO.puts("\n No hay equipos registrados.\n")
     else
-      IO.puts("\n👥 EQUIPOS ACTIVOS")
-      IO.puts("═══════════════════════════════════")
+      IO.puts("\n EQUIPOS ACTIVOS")
+      IO.puts("--------")
 
       Enum.each(equipos, fn equipo ->
         IO.puts("• #{equipo.nombre}")
         IO.puts("  Tema: #{equipo.tema}")
         IO.puts("  Líder: #{equipo.lider}")
         IO.puts("  Miembros: #{length(equipo.miembros)}")
-        IO.puts("  ───────────────────────────────")
+        IO.puts("  ---------")
       end)
 
       IO.puts("")
@@ -227,11 +221,11 @@ defmodule AplicacionHackathon do
 
     case ServicioEquipos.solicitar_crear(nombre, tema, lider) do
       {:ok, _equipo} ->
-        IO.puts("\n✅ Equipo '#{nombre}' creado exitosamente!")
+        IO.puts("\n Equipo '#{nombre}' creado exitosamente!")
         IO.puts("   Tema: #{tema}\n")
 
       {:error, msg} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     end
   end
 
@@ -240,21 +234,21 @@ defmodule AplicacionHackathon do
 
     case ServicioEquipos.solicitar_agregar_miembro(nombre_equipo, nombre) do
       {:ok, msg} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:error, msg} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     end
   end
 
   defp manejar_ver_proyecto(nombre_equipo) do
     case ServicioProyectos.solicitar_obtener(nombre_equipo) do
       nil ->
-        IO.puts("\n❌ No existe un proyecto para el equipo '#{nombre_equipo}'\n")
+        IO.puts("\n No existe un proyecto para el equipo '#{nombre_equipo}'\n")
 
       proyecto ->
-        IO.puts("\n💡 PROYECTO: #{proyecto.titulo}")
-        IO.puts("═══════════════════════════════════")
+        IO.puts("\n PROYECTO: #{proyecto.titulo}")
+        IO.puts("---------")
         IO.puts("Equipo: #{proyecto.nombre_equipo}")
         IO.puts("Categoría: #{proyecto.categoria}")
         IO.puts("Estado: #{proyecto.estado}")
@@ -262,14 +256,14 @@ defmodule AplicacionHackathon do
         IO.puts("#{proyecto.descripcion}")
 
         if length(proyecto.avances) > 0 do
-          IO.puts("\n📈 Avances (#{length(proyecto.avances)}):")
+          IO.puts("\n Avances (#{length(proyecto.avances)}):")
           Enum.each(proyecto.avances, fn avance ->
             IO.puts("  • #{avance.texto}")
           end)
         end
 
         if length(proyecto.retroalimentacion) > 0 do
-          IO.puts("\n💬 Retroalimentación:")
+          IO.puts("\n Retroalimentación:")
           Enum.each(proyecto.retroalimentacion, fn retro ->
             IO.puts("  [#{retro.mentor}]: #{retro.comentario}")
           end)
@@ -280,27 +274,27 @@ defmodule AplicacionHackathon do
   end
 
   defp manejar_agregar_avance(nombre_equipo) do
-    IO.puts("\n📈 AGREGAR AVANCE")
+    IO.puts("\n AGREGAR AVANCE")
     avance = IO.gets("Describe el avance: ") |> String.trim()
 
     case ServicioProyectos.solicitar_agregar_avance(nombre_equipo, avance) do
       {:ok, msg} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:error, msg} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     end
   end
 
   defp manejar_chat(canal) do
-    IO.puts("\n💬 CHAT: #{canal}")
-    IO.puts("═══════════════════════════════════")
+    IO.puts("\n CHAT: #{canal}")
+    IO.puts("----------")
     IO.puts("(Escribe 'salir' para volver al menú)\n")
 
     # Mostrar mensajes anteriores
     mensajes = ServicioChat.solicitar_obtener_mensajes(canal)
     if length(mensajes) > 0 do
-      IO.puts("📝 Mensajes anteriores:")
+      IO.puts(" Mensajes anteriores:")
       Enum.each(mensajes, fn msg ->
         timestamp = Calendar.strftime(msg.timestamp, "%H:%M")
         IO.puts("  [#{timestamp}] #{msg.autor}: #{msg.texto}")
@@ -329,17 +323,17 @@ defmodule AplicacionHackathon do
     mentores = ServicioMentoria.solicitar_listar()
 
     if Enum.empty?(mentores) do
-      IO.puts("\n🎓 No hay mentores registrados.\n")
+      IO.puts("\n No hay mentores registrados.\n")
     else
-      IO.puts("\n🎓 MENTORES DISPONIBLES")
-      IO.puts("═══════════════════════════════════")
+      IO.puts("\n MENTORES DISPONIBLES")
+      IO.puts("------------------")
 
       Enum.each(mentores, fn mentor ->
         disponible = if mentor.disponible, do: "✓", else: "✗"
         IO.puts("#{disponible} #{mentor.nombre}")
         IO.puts("  Especialidad: #{mentor.especialidad}")
         IO.puts("  Equipos asignados: #{length(mentor.equipos_asignados)}")
-        IO.puts("  ───────────────────────────────")
+        IO.puts(" ------------------")
       end)
 
       IO.puts("")

@@ -19,9 +19,9 @@ archivos_necesarios = [
 
 Enum.each(archivos_necesarios, fn archivo ->
   if File.exists?(archivo) do
-    IO.puts("✓ #{archivo}")
+    IO.puts(" #{archivo}")
   else
-    IO.puts("✗ #{archivo} - NO ENCONTRADO")
+    IO.puts(" #{archivo} - NO ENCONTRADO")
   end
 end)
 

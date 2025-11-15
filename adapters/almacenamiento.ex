@@ -22,7 +22,7 @@ defmodule Adaptadores.Almacenamiento do
     Agent.start_link(fn -> estado_inicial end, name: __MODULE__)
   end
 
-  # ========== OPERACIONES CON EQUIPOS ==========
+  #  OPERACIONES CON EQUIPOS
 
   def guardar_equipo(equipo) do
     Agent.update(__MODULE__, fn estado ->
@@ -43,7 +43,7 @@ defmodule Adaptadores.Almacenamiento do
     end)
   end
 
-  # ========== OPERACIONES CON PROYECTOS ==========
+  # operaciones proyectos
 
   def guardar_proyecto(proyecto) do
     Agent.update(__MODULE__, fn estado ->
@@ -64,7 +64,7 @@ defmodule Adaptadores.Almacenamiento do
     end)
   end
 
-  # ========== OPERACIONES CON PARTICIPANTES ==========
+  #  operaciones participantes
 
   def guardar_participante(participante) do
     Agent.update(__MODULE__, fn estado ->
@@ -118,8 +118,7 @@ defmodule Adaptadores.Almacenamiento do
     end)
   end
 
-  # ========== OPERACIONES CON MENSAJES ==========
-
+  # operaciones de mensajes
   def guardar_mensaje(mensaje) do
     Agent.update(__MODULE__, fn estado ->
       mensajes = [mensaje | estado.mensajes]

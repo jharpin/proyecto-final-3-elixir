@@ -92,36 +92,60 @@ defmodule Adaptadores.ProcesadorComandos do
   def mostrar_ayuda() do
     """
 
-    ╔══════════════════════════════════════════════════════╗
-    ║          COMANDOS DISPONIBLES - CODE4FUTURE         ║
-    ╚══════════════════════════════════════════════════════╝
+ COMANDOS DISPONIBLES
+        CODE4FUTURE
 
-    📋 GESTIÓN DE PARTICIPANTES:
-       /registrar                  → Registrarse en el sistema
-       /participantes              → Ver todos los participantes
 
-    👥 GESTIÓN DE EQUIPOS:
-       /equipos                    → Ver todos los equipos
-       /crear equipo <nombre> <tema> → Crear un equipo nuevo
-       /unirse <equipo>            → Unirse a un equipo
+GESTION DE PARTICIPANTES:
+  /registrar
+        Registrarse en el sistema
 
-    💡 GESTIÓN DE PROYECTOS:
-       /proyecto <equipo>          → Ver proyecto de un equipo
-       /avance <equipo>            → Agregar avance a proyecto
-       /crear proyecto             → Registrar proyecto del equipo
+  /participantes
+        Ver todos los participantes
 
-    💬 COMUNICACIÓN:
-       /chat <equipo>              → Abrir chat del equipo
-       /chat general               → Chat general de la hackathon
 
-    🎓 MENTORÍA:
-       /mentores                   → Ver mentores disponibles
+GESTION DE EQUIPOS:
+  /equipos
+        Ver todos los equipos
 
-    ❓ SISTEMA:
-       /ayuda                      → Mostrar esta ayuda
-       /salir                      → Salir del sistema
+  /crear equipo <nombre> <tema>
+        Crear un equipo nuevo
 
-    ══════════════════════════════════════════════════════
-    """
+  /unirse <equipo>
+        Unirse a un equipo
+
+
+GESTION DE PROYECTOS:
+  /proyecto <equipo>
+        Ver proyecto de un equipo
+
+  /avance <equipo>
+        Agregar avance al proyecto
+
+  /crear proyecto
+        Registrar proyecto del equipo
+
+
+COMUNICACION:
+  /chat <equipo>
+        Abrir chat del equipo
+
+  /chat general
+        Chat general de la hackathon
+
+
+MENTORIA:
+  /mentores
+        Ver mentores disponibles
+
+
+SISTEMA:
+  /ayuda
+        Mostrar esta ayuda
+
+  /salir
+        Salir del sistema
+
+"""
   end
 end
