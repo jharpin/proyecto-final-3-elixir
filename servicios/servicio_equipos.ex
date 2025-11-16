@@ -66,14 +66,24 @@ defmodule Servicios.ServicioEquipos do
       nil ->
         # Verificar que el líder existe como participante
         participantes = Almacenamiento.listar_participantes()
-        participante_existe = Enum.any?(participantes, fn p -> p.nombre == lider end)
+        participante_lider = Enum.find(participantes, fn p -> p.nombre == lider end)
 
-        if participante_existe do
-          equipo = Equipo.nuevo(nombre, tema, lider)
-          Almacenamiento.guardar_equipo(equipo)
-          {:ok, equipo}
-        else
-          {:error, "El lider del equipo debe ser un participante registrado"}
+        cond do
+          participante_lider == nil ->
+            {:error, "El lider del equipo debe ser un participante registrado"}
+
+          participante_lider.equipo != nil ->
+            {:error, "El lider ya pertenece al equipo '#{participante_lider.equipo}'"}
+
+          true ->
+            equipo = Equipo.nuevo(nombre, tema, lider)
+            Almacenamiento.guardar_equipo(equipo)
+
+            # CRUCIAL: Actualizar el participante líder con el equipo asignado
+            participante_actualizado = Dominio.Participante.asignar_equipo(participante_lider, nombre)
+            Almacenamiento.guardar_participante(participante_actualizado)
+
+            {:ok, equipo}
         end
 
       _equipo ->
@@ -87,21 +97,32 @@ defmodule Servicios.ServicioEquipos do
         {:error, "El equipo no existe"}
 
       equipo ->
-        # Verificar que el miembro existe como participante
-        participantes = Almacenamiento.listar_participantes()
-        participante_existe = Enum.any?(participantes, fn p -> p.nombre == nombre_miembro end)
+        # Buscar al participante por nombre para verificar si ya tiene equipo
+        participante = Almacenamiento.listar_participantes()
+                      |> Enum.find(fn p -> p.nombre == nombre_miembro end)
 
-        if participante_existe do
-          case Equipo.agregar_miembro(equipo, nombre_miembro) do
-            {:ok, equipo_actualizado} ->
-              Almacenamiento.guardar_equipo(equipo_actualizado)
-              {:ok, "#{nombre_miembro} se unio al equipo"}
+        cond do
+          participante == nil ->
+            {:error, "El participante no existe. Debe registrarse primero."}
 
-            {:error, msg} ->
-              {:error, msg}
-          end
-        else
-          {:error, "El participante no esta registrado en el sistema"}
+          participante.equipo != nil and participante.equipo != nombre_equipo ->
+            {:error, "Ya perteneces al equipo '#{participante.equipo}'. Usa /salir-equipo primero."}
+
+          nombre_miembro in equipo.miembros ->
+            {:error, "Este participante ya está en el equipo"}
+
+          true ->
+            case Equipo.agregar_miembro(equipo, nombre_miembro) do
+              {:ok, equipo_actualizado} ->
+                Almacenamiento.guardar_equipo(equipo_actualizado)
+                # Actualizar el participante con el equipo asignado
+                participante_actualizado = Dominio.Participante.asignar_equipo(participante, nombre_equipo)
+                Almacenamiento.guardar_participante(participante_actualizado)
+                {:ok, "#{nombre_miembro} se unió al equipo"}
+
+              {:error, msg} ->
+                {:error, msg}
+            end
         end
     end
   end
@@ -115,6 +136,16 @@ defmodule Servicios.ServicioEquipos do
         case Equipo.remover_miembro(equipo, nombre_miembro) do
           {:ok, equipo_actualizado} ->
             Almacenamiento.guardar_equipo(equipo_actualizado)
+
+            # Actualizar el participante para remover su asignación de equipo
+            participante = Almacenamiento.listar_participantes()
+                          |> Enum.find(fn p -> p.nombre == nombre_miembro end)
+
+            if participante do
+              participante_actualizado = Dominio.Participante.asignar_equipo(participante, nil)
+              Almacenamiento.guardar_participante(participante_actualizado)
+            end
+
             {:ok, "#{nombre_miembro} fue removido del equipo"}
 
           {:error, msg} ->
