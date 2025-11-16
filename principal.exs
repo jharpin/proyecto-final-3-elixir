@@ -121,6 +121,10 @@ defmodule AplicacionHackathon do
         manejar_crear_equipo(datos)
         ciclo_principal()
 
+      {:crear_proyecto, nombre_equipo} ->
+        manejar_crear_proyecto(nombre_equipo)
+        ciclo_principal()
+
       {:unirse_equipo, nombre_equipo} ->
         manejar_unirse_equipo(nombre_equipo)
         ciclo_principal()
@@ -230,6 +234,23 @@ defmodule AplicacionHackathon do
 
       {:error, msg} ->
         IO.puts("\n Error: #{msg}\n")
+    end
+  end
+
+  defp manejar_crear_proyecto(nombre_equipo) do
+    IO.puts("\n📋 CREAR PROYECTO PARA: #{nombre_equipo}")
+    IO.puts("--------------------")
+
+    titulo = IO.gets("Título del proyecto: ") |> String.trim()
+    descripcion = IO.gets("Descripción: ") |> String.trim()
+    categoria = IO.gets("Categoría (ej: Educación, Ambiental, Social, Tecnología, etc.): ") |> String.trim()
+
+    case ServicioProyectos.solicitar_crear(nombre_equipo, titulo, descripcion, categoria) do
+      {:ok, _proyecto} ->
+        IO.puts("\n✅ Proyecto '#{titulo}' creado exitosamente!\n")
+
+      {:error, msg} ->
+        IO.puts("\n❌ Error: #{msg}\n")
     end
   end
 

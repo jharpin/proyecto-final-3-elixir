@@ -135,7 +135,7 @@ GESTION DE PROYECTOS:
   /avance <equipo>
         Agregar avance al proyecto
 
-  /crear proyecto
+  /crear proyecto<equipo>
         Registrar proyecto del equipo
 
 
