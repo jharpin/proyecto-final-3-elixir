@@ -2,6 +2,7 @@ defmodule Dominio.Proyecto do
   @moduledoc """
   Representa el proyecto que desarrolla un equipo durante la Hackathon.
   Incluye la idea, descripción, avances y retroalimentación.
+  Auto-creado al crear un equipo.
   """
 
   defstruct [
@@ -11,26 +12,51 @@ defmodule Dominio.Proyecto do
     :descripcion,
     :categoria,     # Educación, Ambiental, Social
     :estado,        # :registrado, :en_progreso, :completado
+    :estado_equipo, # :activo, :inactivo (sincronizado con el equipo)
     :avances,       # Lista de avances realizados
     :retroalimentacion, # Comentarios de mentores
+    :suscriptores,  # PIDs que escuchan cambios en tiempo real
     :fecha_registro,
     :fecha_actualizacion
   ]
 
   @doc """
-  Crea un nuevo proyecto
+  Crea un nuevo proyecto automáticamente al crear un equipo
   """
-  def nuevo(nombre_equipo, titulo, descripcion, categoria) do
+  def nuevo(nombre_equipo, categoria, estado_equipo \\ :activo) do
     %__MODULE__{
       id: generar_id(),
       nombre_equipo: nombre_equipo,
-      titulo: titulo,
-      descripcion: descripcion,
+      titulo: "Proyecto #{nombre_equipo}",
+      descripcion: "Proyecto en desarrollo para la categoría #{categoria}",
       categoria: categoria,
       estado: :registrado,
+      estado_equipo: estado_equipo,
       avances: [],
       retroalimentacion: [],
+      suscriptores: [],
       fecha_registro: DateTime.utc_now(),
+      fecha_actualizacion: DateTime.utc_now()
+    }
+  end
+
+  @doc """
+  Actualiza los detalles del proyecto (título y descripción)
+  """
+  def actualizar_detalles(proyecto, titulo, descripcion) do
+    %{proyecto |
+      titulo: titulo,
+      descripcion: descripcion,
+      fecha_actualizacion: DateTime.utc_now()
+    }
+  end
+
+  @doc """
+  Sincroniza el estado del equipo con el proyecto
+  """
+  def sincronizar_estado_equipo(proyecto, estado_equipo) do
+    %{proyecto |
+      estado_equipo: estado_equipo,
       fecha_actualizacion: DateTime.utc_now()
     }
   end
@@ -52,6 +78,37 @@ defmodule Dominio.Proyecto do
       estado: :en_progreso,
       fecha_actualizacion: timestamp
     }
+  end
+
+  @doc """
+  Agrega un suscriptor para recibir notificaciones en tiempo real
+  """
+  def suscribir(proyecto, pid) do
+    if pid in proyecto.suscriptores do
+      proyecto
+    else
+      %{proyecto | suscriptores: [pid | proyecto.suscriptores]}
+    end
+  end
+
+  @doc """
+  Remueve un suscriptor
+  """
+  def desuscribir(proyecto, pid) do
+    suscriptores_actualizados = List.delete(proyecto.suscriptores, pid)
+    %{proyecto | suscriptores: suscriptores_actualizados}
+  end
+
+  @doc """
+  Notifica a todos los suscriptores sobre un cambio
+  """
+  def notificar_suscriptores(proyecto, tipo_evento, datos) do
+    Enum.each(proyecto.suscriptores, fn pid ->
+      if Process.alive?(pid) do
+        send(pid, {:actualizacion_proyecto, tipo_evento, proyecto.nombre_equipo, datos})
+      end
+    end)
+    proyecto
   end
 
   @doc """
