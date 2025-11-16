@@ -19,15 +19,32 @@ defmodule Dominio.Participante do
   Crea un nuevo participante
   """
   def nuevo(nombre, correo, rol \\ :participante) do
-    %__MODULE__{
-      id: generar_id(),
-      nombre: nombre,
-      correo: correo,
-      rol: rol,
-      equipo: nil,
-      habilidades: [],
-      fecha_registro: DateTime.utc_now()
-    }
+    case validar_correo(correo) do
+      :ok ->
+        {:ok, %__MODULE__{
+          id: generar_id(),
+          nombre: nombre,
+          correo: correo,
+          rol: rol,
+          equipo: nil,
+          habilidades: [],
+          fecha_registro: DateTime.utc_now()
+        }}
+
+      {:error, mensaje} ->
+        {:error, mensaje}
+    end
+  end
+
+  @doc """
+  Valida que el correo contenga @
+  """
+  defp validar_correo(correo) do
+    if String.contains?(correo, "@") do
+      :ok
+    else
+      {:error, "El correo debe contener el caracter @"}
+    end
   end
 
   @doc """
@@ -35,13 +52,6 @@ defmodule Dominio.Participante do
   """
   def asignar_equipo(participante, nombre_equipo) do
     %{participante | equipo: nombre_equipo}
-  end
-
-  @doc """
-  Desasigna el equipo del participante
-  """
-  def desasignar_equipo(participante) do
-    %{participante | equipo: nil}
   end
 
   @doc """

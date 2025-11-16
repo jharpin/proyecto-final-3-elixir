@@ -41,6 +41,28 @@ defmodule Adaptadores.ProcesadorComandos do
     end
   end
 
+  # /listar proyectos - Listar todos los proyectos
+  defp procesar_comando(["/listar", "proyectos"]) do
+    {:listar_proyectos, nil}
+  end
+
+  # /listar proyectos activos - Proyectos de equipos activos
+  defp procesar_comando(["/listar", resto]) do
+    case String.split(resto, " ", parts: 2) do
+      ["proyectos", "activos"] ->
+        {:listar_proyectos_activos, nil}
+
+      ["proyectos", "inactivos"] ->
+        {:listar_proyectos_inactivos, nil}
+
+      ["proyectos", categoria] ->
+        {:listar_proyectos_categoria, categoria}
+
+      _ ->
+        {:error, "Comando /listar no reconocido"}
+    end
+  end
+
   # /unirse <nombre_equipo>
   defp procesar_comando(["/unirse", nombre_equipo]) do
     {:unirse_equipo, nombre_equipo}
@@ -71,14 +93,14 @@ defmodule Adaptadores.ProcesadorComandos do
     {:listar_participantes, nil}
   end
 
-  # /usuarios - Alias para listar participantes (con equipos)
-  defp procesar_comando(["/usuarios"]) do
-    {:listar_participantes, nil}
+  # /activar <nombre_equipo> - Activar equipo
+  defp procesar_comando(["/activar", nombre_equipo]) do
+    {:activar_equipo, nombre_equipo}
   end
 
-  # /salir-equipo - Salir del equipo actual
-  defp procesar_comando(["/salir-equipo"]) do
-    {:salir_equipo, nil}
+  # /desactivar <nombre_equipo> - Desactivar equipo
+  defp procesar_comando(["/desactivar", nombre_equipo]) do
+    {:desactivar_equipo, nombre_equipo}
   end
 
   # /ayuda - Mostrar ayuda
@@ -110,11 +132,8 @@ GESTION DE PARTICIPANTES:
   /registrar
         Registrarse en el sistema
 
-  /participantes o /usuarios
-        Ver todos los participantes con sus equipos
-
-  /salir-equipo
-        Salir del equipo actual
+  /participantes
+        Ver todos los participantes
 
 
 GESTION DE EQUIPOS:
@@ -127,6 +146,12 @@ GESTION DE EQUIPOS:
   /unirse <equipo>
         Unirse a un equipo
 
+  /activar <equipo>
+        Activar un equipo
+
+  /desactivar <equipo>
+        Desactivar un equipo
+
 
 GESTION DE PROYECTOS:
   /proyecto <equipo>
@@ -135,8 +160,17 @@ GESTION DE PROYECTOS:
   /avance <equipo>
         Agregar avance al proyecto
 
-  /crear proyecto<equipo>
+  /crear proyecto
         Registrar proyecto del equipo
+
+  /listar proyectos
+        Ver todos los proyectos
+
+  /listar proyectos activos
+        Ver proyectos de equipos activos
+
+  /listar proyectos <categoria>
+        Ver proyectos por categoria (Educacion, Ambiental, Social)
 
 
 COMUNICACION:

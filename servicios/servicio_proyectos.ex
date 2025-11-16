@@ -38,6 +38,16 @@ defmodule Servicios.ServicioProyectos do
         send(remitente, {:lista_proyectos, proyectos})
         ciclo()
 
+      {remitente, :listar_por_estado, estado_equipo} ->
+        proyectos = listar_proyectos_por_estado_equipo(estado_equipo)
+        send(remitente, {:lista_proyectos, proyectos})
+        ciclo()
+
+      {remitente, :listar_por_categoria, categoria} ->
+        proyectos = listar_proyectos_por_categoria(categoria)
+        send(remitente, {:lista_proyectos, proyectos})
+        ciclo()
+
       {remitente, :agregar_avance, nombre_equipo, texto_avance} ->
         resultado = agregar_avance(nombre_equipo, texto_avance)
         send(remitente, {:avance_agregado, resultado})
@@ -88,6 +98,19 @@ defmodule Servicios.ServicioProyectos do
       proyecto ->
         proyecto_actualizado = Proyecto.agregar_avance(proyecto, texto_avance)
         Almacenamiento.guardar_proyecto(proyecto_actualizado)
+
+        # Notificar al chat general sobre el avance
+        timestamp = DateTime.utc_now() |> Calendar.strftime("%H:%M")
+        mensaje_notificacion = "[#{timestamp}] El equipo #{nombre_equipo} ha registrado un nuevo avance"
+
+        mensaje = %{
+          canal: "general",
+          autor: "Sistema",
+          texto: mensaje_notificacion,
+          timestamp: DateTime.utc_now()
+        }
+        Almacenamiento.guardar_mensaje(mensaje)
+
         {:ok, "Avance registrado correctamente"}
     end
   end
@@ -114,6 +137,21 @@ defmodule Servicios.ServicioProyectos do
         Almacenamiento.guardar_proyecto(proyecto_completado)
         {:ok, "Proyecto marcado como completado"}
     end
+  end
+
+  defp listar_proyectos_por_estado_equipo(estado_equipo) do
+    equipos = Almacenamiento.listar_equipos()
+    proyectos = Almacenamiento.listar_proyectos()
+
+    equipos_filtrados = Enum.filter(equipos, fn eq -> eq.estado == estado_equipo end)
+    nombres_equipos = Enum.map(equipos_filtrados, fn eq -> eq.nombre end)
+
+    Enum.filter(proyectos, fn proy -> proy.nombre_equipo in nombres_equipos end)
+  end
+
+  defp listar_proyectos_por_categoria(categoria) do
+    proyectos = Almacenamiento.listar_proyectos()
+    Enum.filter(proyectos, fn proy -> proy.categoria == categoria end)
   end
 
   # ========== API PÚBLICA ==========
@@ -162,6 +200,32 @@ defmodule Servicios.ServicioProyectos do
   """
   def solicitar_listar() do
     send(@nombre_servicio, {self(), :listar})
+
+    receive do
+      {:lista_proyectos, proyectos} -> proyectos
+    after
+      5000 -> []
+    end
+  end
+
+  @doc """
+  Solicita listar proyectos filtrados por estado del equipo
+  """
+  def solicitar_listar_por_estado(estado_equipo) do
+    send(@nombre_servicio, {self(), :listar_por_estado, estado_equipo})
+
+    receive do
+      {:lista_proyectos, proyectos} -> proyectos
+    after
+      5000 -> []
+    end
+  end
+
+  @doc """
+  Solicita listar proyectos filtrados por categoria
+  """
+  def solicitar_listar_por_categoria(categoria) do
+    send(@nombre_servicio, {self(), :listar_por_categoria, categoria})
 
     receive do
       {:lista_proyectos, proyectos} -> proyectos

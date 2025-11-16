@@ -58,9 +58,14 @@ defmodule Servicios.ServicioMentoria do
   defp registrar_mentor(nombre, correo, especialidad) do
     case Almacenamiento.obtener_mentor(nombre) do
       nil ->
-        mentor = Mentor.nuevo(nombre, correo, especialidad)
-        Almacenamiento.guardar_mentor(mentor)
-        {:ok, mentor}
+        case Mentor.nuevo(nombre, correo, especialidad) do
+          {:ok, mentor} ->
+            Almacenamiento.guardar_mentor(mentor)
+            {:ok, mentor}
+
+          {:error, mensaje} ->
+            {:error, mensaje}
+        end
 
       _mentor ->
         {:error, "Ya existe un mentor con ese nombre"}

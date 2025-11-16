@@ -18,15 +18,32 @@ defmodule Dominio.Mentor do
   Crea un nuevo mentor
   """
   def nuevo(nombre, correo, especialidad) do
-    %__MODULE__{
-      id: generar_id(),
-      nombre: nombre,
-      correo: correo,
-      especialidad: especialidad,
-      disponible: true,
-      equipos_asignados: [],
-      fecha_registro: DateTime.utc_now()
-    }
+    case validar_correo(correo) do
+      :ok ->
+        {:ok, %__MODULE__{
+          id: generar_id(),
+          nombre: nombre,
+          correo: correo,
+          especialidad: especialidad,
+          disponible: true,
+          equipos_asignados: [],
+          fecha_registro: DateTime.utc_now()
+        }}
+
+      {:error, mensaje} ->
+        {:error, mensaje}
+    end
+  end
+
+  @doc """
+  Valida que el correo contenga @
+  """
+  defp validar_correo(correo) do
+    if String.contains?(correo, "@") do
+      :ok
+    else
+      {:error, "El correo debe contener el caracter @"}
+    end
   end
 
   @doc """

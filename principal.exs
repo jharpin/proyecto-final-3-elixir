@@ -121,10 +121,6 @@ defmodule AplicacionHackathon do
         manejar_crear_equipo(datos)
         ciclo_principal()
 
-      {:crear_proyecto, nombre_equipo} ->
-        manejar_crear_proyecto(nombre_equipo)
-        ciclo_principal()
-
       {:unirse_equipo, nombre_equipo} ->
         manejar_unirse_equipo(nombre_equipo)
         ciclo_principal()
@@ -145,8 +141,28 @@ defmodule AplicacionHackathon do
         manejar_listar_mentores()
         ciclo_principal()
 
-      {:salir_equipo, _} ->
-        manejar_salir_equipo()
+      {:activar_equipo, nombre_equipo} ->
+        manejar_cambiar_estado_equipo(nombre_equipo, :activo)
+        ciclo_principal()
+
+      {:desactivar_equipo, nombre_equipo} ->
+        manejar_cambiar_estado_equipo(nombre_equipo, :inactivo)
+        ciclo_principal()
+
+      {:listar_proyectos, _} ->
+        manejar_listar_proyectos()
+        ciclo_principal()
+
+      {:listar_proyectos_activos, _} ->
+        manejar_listar_proyectos_por_estado(:activo)
+        ciclo_principal()
+
+      {:listar_proyectos_inactivos, _} ->
+        manejar_listar_proyectos_por_estado(:inactivo)
+        ciclo_principal()
+
+      {:listar_proyectos_categoria, categoria} ->
+        manejar_listar_proyectos_por_categoria(categoria)
         ciclo_principal()
 
       {:desconocido, _} ->
@@ -213,10 +229,17 @@ defmodule AplicacionHackathon do
       IO.puts("--------")
 
       Enum.each(equipos, fn equipo ->
-        IO.puts("• #{equipo.nombre}")
+        estado_texto = if equipo.estado == :activo, do: "Activo", else: "Inactivo"
+        IO.puts("Nombre: #{equipo.nombre}")
         IO.puts("  Tema: #{equipo.tema}")
-        IO.puts("  Líder: #{equipo.lider}")
-        IO.puts("  Miembros: #{length(equipo.miembros)}")
+        IO.puts("  Estado: #{estado_texto}")
+        IO.puts("  Lider: #{equipo.lider}")
+        IO.puts("  Miembros (#{length(equipo.miembros)}):")
+
+        Enum.each(equipo.miembros, fn miembro ->
+          IO.puts("    - #{miembro}")
+        end)
+
         IO.puts("  ---------")
       end)
 
@@ -237,39 +260,15 @@ defmodule AplicacionHackathon do
     end
   end
 
-  defp manejar_crear_proyecto(nombre_equipo) do
-    IO.puts("\n📋 CREAR PROYECTO PARA: #{nombre_equipo}")
-    IO.puts("--------------------")
+  defp manejar_unirse_equipo(nombre_equipo) do
+    nombre = IO.gets("\nIngresa tu nombre: ") |> String.trim()
 
-    titulo = IO.gets("Título del proyecto: ") |> String.trim()
-    descripcion = IO.gets("Descripción: ") |> String.trim()
-    categoria = IO.gets("Categoría (ej: Educación, Ambiental, Social, Tecnología, etc.): ") |> String.trim()
-
-    case ServicioProyectos.solicitar_crear(nombre_equipo, titulo, descripcion, categoria) do
-      {:ok, _proyecto} ->
-        IO.puts("\n✅ Proyecto '#{titulo}' creado exitosamente!\n")
+    case ServicioEquipos.solicitar_agregar_miembro(nombre_equipo, nombre) do
+      {:ok, msg} ->
+        IO.puts("\n #{msg}\n")
 
       {:error, msg} ->
-        IO.puts("\n❌ Error: #{msg}\n")
-    end
-  end
-
-  defp manejar_unirse_equipo(nombre_equipo) do
-    correo = IO.gets("\nIngresa tu correo electrónico: ") |> String.trim()
-
-    # Obtener el participante por correo
-    participante = ServicioParticipantes.solicitar_obtener(correo)
-
-    if participante == nil do
-      IO.puts("\n Error: No se encontró un participante con ese correo. Debes registrarte primero.\n")
-    else
-      case ServicioEquipos.solicitar_agregar_miembro(nombre_equipo, participante.nombre) do
-        {:ok, msg} ->
-          IO.puts("\n #{msg}\n")
-
-        {:error, msg} ->
-          IO.puts("\n Error: #{msg}\n")
-      end
+        IO.puts("\n Error: #{msg}\n")
     end
   end
 
@@ -361,9 +360,10 @@ defmodule AplicacionHackathon do
       IO.puts("------------------")
 
       Enum.each(mentores, fn mentor ->
-        disponible = if mentor.disponible, do: "✓", else: "✗"
-        IO.puts("#{disponible} #{mentor.nombre}")
+        disponible = if mentor.disponible, do: "Si", else: "No"
+        IO.puts("Nombre: #{mentor.nombre}")
         IO.puts("  Especialidad: #{mentor.especialidad}")
+        IO.puts("  Disponible: #{disponible}")
         IO.puts("  Equipos asignados: #{length(mentor.equipos_asignados)}")
         IO.puts(" ------------------")
       end)
@@ -372,56 +372,49 @@ defmodule AplicacionHackathon do
     end
   end
 
-  defp manejar_salir_equipo() do
-    IO.puts("\n SALIR DEL EQUIPO")
-    IO.puts("--------------------")
+  defp manejar_cambiar_estado_equipo(nombre_equipo, nuevo_estado) do
+    case ServicioEquipos.solicitar_cambiar_estado(nombre_equipo, nuevo_estado) do
+      {:ok, msg} ->
+        IO.puts("\n #{msg}\n")
 
-    correo = IO.gets("Ingresa tu correo electrónico: ") |> String.trim()
+      {:error, msg} ->
+        IO.puts("\n Error: #{msg}\n")
+    end
+  end
 
-    # Obtener el participante
-    participante = ServicioParticipantes.solicitar_obtener(correo)
+  defp manejar_listar_proyectos() do
+    proyectos = ServicioProyectos.solicitar_listar()
+    mostrar_lista_proyectos(proyectos, "TODOS LOS PROYECTOS")
+  end
 
-    if participante == nil do
-      IO.puts("\n Error: No se encontró un participante con ese correo.\n")
+  defp manejar_listar_proyectos_por_estado(estado) do
+    proyectos = ServicioProyectos.solicitar_listar_por_estado(estado)
+    titulo = if estado == :activo, do: "PROYECTOS DE EQUIPOS ACTIVOS", else: "PROYECTOS DE EQUIPOS INACTIVOS"
+    mostrar_lista_proyectos(proyectos, titulo)
+  end
+
+  defp manejar_listar_proyectos_por_categoria(categoria) do
+    proyectos = ServicioProyectos.solicitar_listar_por_categoria(categoria)
+    mostrar_lista_proyectos(proyectos, "PROYECTOS - CATEGORIA: #{categoria}")
+  end
+
+  defp mostrar_lista_proyectos(proyectos, titulo) do
+    if Enum.empty?(proyectos) do
+      IO.puts("\n No hay proyectos para mostrar.\n")
     else
-      if participante.equipo == nil do
-        IO.puts("\n No perteneces a ningún equipo.\n")
-      else
-        # Confirmar
-        IO.puts("\nEstás a punto de salir del equipo: #{participante.equipo}")
-        confirmacion = IO.gets("¿Estás seguro? (si/no): ") |> String.trim() |> String.downcase()
+      IO.puts("\n #{titulo}")
+      IO.puts("-------")
 
-        if confirmacion == "si" or confirmacion == "s" do
-          # Remover del equipo
-          nombre_equipo = participante.equipo
+      Enum.each(proyectos, fn proyecto ->
+        IO.puts("Proyecto: #{proyecto.titulo}")
+        IO.puts("  Equipo: #{proyecto.nombre_equipo}")
+        IO.puts("  Categoria: #{proyecto.categoria}")
+        IO.puts("  Estado: #{proyecto.estado}")
+        IO.puts("  Avances: #{length(proyecto.avances)}")
+        IO.puts("-------")
+      end)
 
-          case ServicioEquipos.solicitar_obtener(nombre_equipo) do
-            nil ->
-              IO.puts("\n Error: El equipo no existe.\n")
-
-            equipo ->
-              # Remover al miembro del equipo (esto también desasigna el equipo del participante)
-              case Dominio.Equipo.remover_miembro(equipo, participante.nombre) do
-                {:ok, equipo_actualizado} ->
-                  # Guardar equipo actualizado
-                  Almacenamiento.guardar_equipo(equipo_actualizado)
-
-                  # Desasignar equipo del participante
-                  case ServicioParticipantes.solicitar_desasignar_equipo(correo) do
-                    {:ok, msg} ->
-                      IO.puts("\n #{msg}\n")
-                    {:error, msg} ->
-                      IO.puts("\n Error: #{msg}\n")
-                  end
-
-                {:error, msg} ->
-                  IO.puts("\n Error: #{msg}\n")
-              end
-          end
-        else
-          IO.puts("\n Operación cancelada.\n")
-        end
-      end
+      IO.puts("")
     end
   end
 end

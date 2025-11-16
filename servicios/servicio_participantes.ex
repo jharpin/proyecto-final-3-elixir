@@ -1,7 +1,8 @@
 defmodule Servicios.ServicioParticipantes do
   @moduledoc """
   Servicio para gestionar participantes.
-"""
+  Usa procesos con spawn/send/receive como en los ejemplos del profesor.
+  """
 
   alias Dominio.Participante
   alias Adaptadores.Almacenamiento
@@ -47,11 +48,6 @@ defmodule Servicios.ServicioParticipantes do
         send(remitente, {:habilidad_agregada, resultado})
         ciclo()
 
-      {remitente, :desasignar_equipo, correo} ->
-        resultado = desasignar_equipo_a_participante(correo)
-        send(remitente, {:equipo_desasignado, resultado})
-        ciclo()
-
       :detener ->
         :ok
     end
@@ -63,9 +59,14 @@ defmodule Servicios.ServicioParticipantes do
     # Verificar si ya existe
     case Almacenamiento.obtener_participante(correo) do
       nil ->
-        participante = Participante.nuevo(nombre, correo, rol)
-        Almacenamiento.guardar_participante(participante)
-        {:ok, participante}
+        case Participante.nuevo(nombre, correo, rol) do
+          {:ok, participante} ->
+            Almacenamiento.guardar_participante(participante)
+            {:ok, participante}
+
+          {:error, mensaje} ->
+            {:error, mensaje}
+        end
 
       _participante ->
         {:error, "Ya existe un participante con ese correo"}
@@ -78,37 +79,15 @@ defmodule Servicios.ServicioParticipantes do
         {:error, "Participante no encontrado"}
 
       participante ->
-        # Verificar que no tenga equipo ya
-        if Participante.tiene_equipo?(participante) do
-          {:error, "Ya perteneces a un equipo. Debes salir primero con /salir-equipo"}
-        else
-          # Verificar que el equipo existe
-          case Almacenamiento.obtener_equipo(nombre_equipo) do
-            nil ->
-              {:error, "El equipo no existe"}
+        # Verificar que el equipo existe
+        case Almacenamiento.obtener_equipo(nombre_equipo) do
+          nil ->
+            {:error, "El equipo no existe"}
 
-            _equipo ->
-              participante_actualizado = Participante.asignar_equipo(participante, nombre_equipo)
-              Almacenamiento.guardar_participante(participante_actualizado)
-              {:ok, "Te uniste al equipo #{nombre_equipo}"}
-          end
-        end
-    end
-  end
-
-  defp desasignar_equipo_a_participante(correo) do
-    case Almacenamiento.obtener_participante(correo) do
-      nil ->
-        {:error, "Participante no encontrado"}
-
-      participante ->
-        if Participante.tiene_equipo?(participante) do
-          equipo_anterior = participante.equipo
-          participante_actualizado = Participante.desasignar_equipo(participante)
-          Almacenamiento.guardar_participante(participante_actualizado)
-          {:ok, "Saliste del equipo #{equipo_anterior}"}
-        else
-          {:error, "No perteneces a ningún equipo"}
+          _equipo ->
+            participante_actualizado = Participante.asignar_equipo(participante, nombre_equipo)
+            Almacenamiento.guardar_participante(participante_actualizado)
+            {:ok, "Te uniste al equipo #{nombre_equipo}"}
         end
     end
   end
@@ -179,19 +158,6 @@ defmodule Servicios.ServicioParticipantes do
 
     receive do
       {:equipo_asignado, resultado} -> resultado
-    after
-      5000 -> {:error, "Timeout"}
-    end
-  end
-
-  @doc """
-  Solicita desasignar el equipo de un participante
-  """
-  def solicitar_desasignar_equipo(correo) do
-    send(@nombre_servicio, {self(), :desasignar_equipo, correo})
-
-    receive do
-      {:equipo_desasignado, resultado} -> resultado
     after
       5000 -> {:error, "Timeout"}
     end
