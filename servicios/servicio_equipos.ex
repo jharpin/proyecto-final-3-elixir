@@ -83,6 +83,9 @@ defmodule Servicios.ServicioEquipos do
             participante_actualizado = Dominio.Participante.asignar_equipo(participante_lider, nombre)
             Almacenamiento.guardar_participante(participante_actualizado)
 
+            # NUEVO: Crear proyecto automáticamente
+            Servicios.ServicioProyectos.solicitar_crear_automatico(nombre, tema, equipo.estado)
+
             {:ok, equipo}
         end
 
@@ -162,6 +165,10 @@ defmodule Servicios.ServicioEquipos do
       equipo ->
         equipo_actualizado = Equipo.cambiar_estado(equipo, nuevo_estado)
         Almacenamiento.guardar_equipo(equipo_actualizado)
+
+        # NUEVO: Sincronizar el estado con el proyecto
+        Servicios.ServicioProyectos.solicitar_sincronizar_estado(nombre_equipo, nuevo_estado)
+
         estado_texto = if nuevo_estado == :activo, do: "activado", else: "desactivado"
         {:ok, "Equipo #{estado_texto} correctamente"}
     end

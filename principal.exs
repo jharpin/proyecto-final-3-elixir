@@ -165,6 +165,14 @@ defmodule AplicacionHackathon do
         manejar_listar_proyectos_por_categoria(categoria)
         ciclo_principal()
 
+      {:actualizar_proyecto, nombre_equipo} ->
+        manejar_actualizar_proyecto(nombre_equipo)
+        ciclo_principal()
+
+      {:monitorear_proyecto, nombre_equipo} ->
+        manejar_monitorear_proyecto(nombre_equipo)
+        ciclo_principal()
+
       {:desconocido, _} ->
         IO.puts(" Comando no reconocido. Usa /ayuda para ver los comandos disponibles.")
         ciclo_principal()
@@ -398,6 +406,73 @@ defmodule AplicacionHackathon do
     mostrar_lista_proyectos(proyectos, "PROYECTOS - CATEGORIA: #{categoria}")
   end
 
+  defp manejar_actualizar_proyecto(nombre_equipo) do
+    case ServicioProyectos.solicitar_obtener(nombre_equipo) do
+      nil ->
+        IO.puts("\n No existe un proyecto para el equipo '#{nombre_equipo}'\n")
+
+      proyecto ->
+        IO.puts("\n ACTUALIZAR PROYECTO: #{nombre_equipo}")
+        IO.puts("--------------------")
+        IO.puts("Título actual: #{proyecto.titulo}")
+        IO.puts("Descripción actual: #{proyecto.descripcion}\n")
+
+        nuevo_titulo = IO.gets("Nuevo título (Enter para mantener): ") |> String.trim()
+        nueva_descripcion = IO.gets("Nueva descripción (Enter para mantener): ") |> String.trim()
+
+        titulo_final = if nuevo_titulo == "", do: proyecto.titulo, else: nuevo_titulo
+        descripcion_final = if nueva_descripcion == "", do: proyecto.descripcion, else: nueva_descripcion
+
+        case ServicioProyectos.solicitar_actualizar_detalles(nombre_equipo, titulo_final, descripcion_final) do
+          {:ok, msg} ->
+            IO.puts("\n ✅ #{msg}\n")
+
+          {:error, msg} ->
+            IO.puts("\n ❌ Error: #{msg}\n")
+        end
+    end
+  end
+
+  defp manejar_monitorear_proyecto(nombre_equipo) do
+    case ServicioProyectos.solicitar_obtener(nombre_equipo) do
+      nil ->
+        IO.puts("\n No existe un proyecto para el equipo '#{nombre_equipo}'\n")
+
+      _proyecto ->
+        IO.puts("\n 📡 MONITOREANDO PROYECTO: #{nombre_equipo}")
+        IO.puts("--------------------------------")
+        IO.puts("Recibirás notificaciones en tiempo real de los avances.")
+        IO.puts("Presiona Ctrl+C dos veces para detener el monitoreo.\n")
+
+        # Suscribirse al proyecto
+        case ServicioProyectos.solicitar_suscribir(nombre_equipo) do
+          {:ok, _msg} ->
+            ciclo_monitoreo(nombre_equipo)
+
+          {:error, msg} ->
+            IO.puts("\n ❌ Error: #{msg}\n")
+        end
+    end
+  end
+
+  defp ciclo_monitoreo(nombre_equipo) do
+    receive do
+      {:actualizacion_proyecto, :nuevo_avance, ^nombre_equipo, datos} ->
+        timestamp = datos.fecha |> Calendar.strftime("%H:%M:%S")
+        IO.puts("\n🚀 [#{timestamp}] NUEVO AVANCE DETECTADO!")
+        IO.puts("   #{datos.texto}")
+        IO.puts("   Total de avances: #{datos.total_avances}\n")
+        ciclo_monitoreo(nombre_equipo)
+
+      _ ->
+        ciclo_monitoreo(nombre_equipo)
+    after
+      30000 ->
+        IO.puts("\n⏱️  Sin actividad por 30 segundos. Monitoreo activo...\n")
+        ciclo_monitoreo(nombre_equipo)
+    end
+  end
+
   defp mostrar_lista_proyectos(proyectos, titulo) do
     if Enum.empty?(proyectos) do
       IO.puts("\n No hay proyectos para mostrar.\n")
@@ -406,10 +481,12 @@ defmodule AplicacionHackathon do
       IO.puts("-------")
 
       Enum.each(proyectos, fn proyecto ->
+        estado_equipo_texto = if proyecto.estado_equipo == :activo, do: "✅ Activo", else: "⏸️  Inactivo"
         IO.puts("Proyecto: #{proyecto.titulo}")
         IO.puts("  Equipo: #{proyecto.nombre_equipo}")
         IO.puts("  Categoria: #{proyecto.categoria}")
-        IO.puts("  Estado: #{proyecto.estado}")
+        IO.puts("  Estado Proyecto: #{proyecto.estado}")
+        IO.puts("  Estado Equipo: #{estado_equipo_texto}")
         IO.puts("  Avances: #{length(proyecto.avances)}")
         IO.puts("-------")
       end)

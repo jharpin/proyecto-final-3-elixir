@@ -2,6 +2,8 @@ defmodule Servicios.ServicioProyectos do
   @moduledoc """
   Servicio para gestionar proyectos de los equipos.
   Maneja registro de ideas, avances y retroalimentación.
+  Los proyectos se crean automáticamente al crear un equipo.
+  Soporta actualizaciones en tiempo real mediante suscripciones.
   """
 
   alias Dominio.Proyecto
@@ -23,9 +25,16 @@ defmodule Servicios.ServicioProyectos do
   """
   defp ciclo() do
     receive do
-      {remitente, :crear, nombre_equipo, titulo, descripcion, categoria} ->
-        resultado = crear_proyecto(nombre_equipo, titulo, descripcion, categoria)
+      # Crear proyecto automáticamente
+      {remitente, :crear_automatico, nombre_equipo, categoria, estado_equipo} ->
+        resultado = crear_proyecto_automatico(nombre_equipo, categoria, estado_equipo)
         send(remitente, {:proyecto_creado, resultado})
+        ciclo()
+
+      # Actualizar detalles del proyecto
+      {remitente, :actualizar_detalles, nombre_equipo, titulo, descripcion} ->
+        resultado = actualizar_detalles_proyecto(nombre_equipo, titulo, descripcion)
+        send(remitente, {:proyecto_actualizado, resultado})
         ciclo()
 
       {remitente, :obtener, nombre_equipo} ->
@@ -38,7 +47,7 @@ defmodule Servicios.ServicioProyectos do
         send(remitente, {:lista_proyectos, proyectos})
         ciclo()
 
-      {remitente, :listar_por_estado, estado_equipo} ->
+      {remitente, :listar_por_estado_equipo, estado_equipo} ->
         proyectos = listar_proyectos_por_estado_equipo(estado_equipo)
         send(remitente, {:lista_proyectos, proyectos})
         ciclo()
@@ -48,8 +57,9 @@ defmodule Servicios.ServicioProyectos do
         send(remitente, {:lista_proyectos, proyectos})
         ciclo()
 
+      # Agregar avance con notificación en tiempo real
       {remitente, :agregar_avance, nombre_equipo, texto_avance} ->
-        resultado = agregar_avance(nombre_equipo, texto_avance)
+        resultado = agregar_avance_tiempo_real(nombre_equipo, texto_avance)
         send(remitente, {:avance_agregado, resultado})
         ciclo()
 
@@ -63,6 +73,18 @@ defmodule Servicios.ServicioProyectos do
         send(remitente, {:proyecto_completado, resultado})
         ciclo()
 
+      # Suscripción para tiempo real
+      {remitente, :suscribir, nombre_equipo, pid_suscriptor} ->
+        resultado = suscribir_a_proyecto(nombre_equipo, pid_suscriptor)
+        send(remitente, {:suscripcion, resultado})
+        ciclo()
+
+      # Sincronizar estado del equipo
+      {remitente, :sincronizar_estado_equipo, nombre_equipo, estado_equipo} ->
+        resultado = sincronizar_estado(nombre_equipo, estado_equipo)
+        send(remitente, {:estado_sincronizado, resultado})
+        ciclo()
+
       :detener ->
         :ok
     end
@@ -70,7 +92,7 @@ defmodule Servicios.ServicioProyectos do
 
   # ========== FUNCIONES PRIVADAS ==========
 
-  defp crear_proyecto(nombre_equipo, titulo, descripcion, categoria) do
+  defp crear_proyecto_automatico(nombre_equipo, categoria, estado_equipo) do
     # Verificar que el equipo existe
     case Almacenamiento.obtener_equipo(nombre_equipo) do
       nil ->
@@ -80,7 +102,7 @@ defmodule Servicios.ServicioProyectos do
         # Verificar si ya tiene proyecto
         case Almacenamiento.obtener_proyecto(nombre_equipo) do
           nil ->
-            proyecto = Proyecto.nuevo(nombre_equipo, titulo, descripcion, categoria)
+            proyecto = Proyecto.nuevo(nombre_equipo, categoria, estado_equipo)
             Almacenamiento.guardar_proyecto(proyecto)
             {:ok, proyecto}
 
@@ -90,18 +112,54 @@ defmodule Servicios.ServicioProyectos do
     end
   end
 
-  defp agregar_avance(nombre_equipo, texto_avance) do
+  defp actualizar_detalles_proyecto(nombre_equipo, titulo, descripcion) do
     case Almacenamiento.obtener_proyecto(nombre_equipo) do
       nil ->
         {:error, "No existe un proyecto para este equipo"}
 
       proyecto ->
+        proyecto_actualizado = Proyecto.actualizar_detalles(proyecto, titulo, descripcion)
+        Almacenamiento.guardar_proyecto(proyecto_actualizado)
+        {:ok, "Detalles del proyecto actualizados"}
+    end
+  end
+
+  defp sincronizar_estado(nombre_equipo, estado_equipo) do
+    case Almacenamiento.obtener_proyecto(nombre_equipo) do
+      nil ->
+        {:error, "No existe un proyecto para este equipo"}
+
+      proyecto ->
+        proyecto_actualizado = Proyecto.sincronizar_estado_equipo(proyecto, estado_equipo)
+        Almacenamiento.guardar_proyecto(proyecto_actualizado)
+        {:ok, "Estado sincronizado"}
+    end
+  end
+
+  defp agregar_avance_tiempo_real(nombre_equipo, texto_avance) do
+    case Almacenamiento.obtener_proyecto(nombre_equipo) do
+      nil ->
+        {:error, "No existe un proyecto para este equipo"}
+
+      proyecto ->
+        # Agregar el avance
         proyecto_actualizado = Proyecto.agregar_avance(proyecto, texto_avance)
+
+        # Notificar a suscriptores en tiempo real
+        datos_notificacion = %{
+          texto: texto_avance,
+          fecha: DateTime.utc_now(),
+          total_avances: length(proyecto_actualizado.avances)
+        }
+
+        Proyecto.notificar_suscriptores(proyecto_actualizado, :nuevo_avance, datos_notificacion)
+
+        # Guardar el proyecto actualizado
         Almacenamiento.guardar_proyecto(proyecto_actualizado)
 
-        # Notificar al chat general sobre el avance
+        # Notificar al chat general
         timestamp = DateTime.utc_now() |> Calendar.strftime("%H:%M")
-        mensaje_notificacion = "[#{timestamp}] El equipo #{nombre_equipo} ha registrado un nuevo avance"
+        mensaje_notificacion = "[#{timestamp}] 🚀 El equipo #{nombre_equipo} ha registrado un nuevo avance"
 
         mensaje = %{
           canal: "general",
@@ -111,7 +169,19 @@ defmodule Servicios.ServicioProyectos do
         }
         Almacenamiento.guardar_mensaje(mensaje)
 
-        {:ok, "Avance registrado correctamente"}
+        {:ok, "Avance registrado y notificado en tiempo real"}
+    end
+  end
+
+  defp suscribir_a_proyecto(nombre_equipo, pid_suscriptor) do
+    case Almacenamiento.obtener_proyecto(nombre_equipo) do
+      nil ->
+        {:error, "No existe un proyecto para este equipo"}
+
+      proyecto ->
+        proyecto_actualizado = Proyecto.suscribir(proyecto, pid_suscriptor)
+        Almacenamiento.guardar_proyecto(proyecto_actualizado)
+        {:ok, "Suscrito a actualizaciones del proyecto"}
     end
   end
 
@@ -140,13 +210,9 @@ defmodule Servicios.ServicioProyectos do
   end
 
   defp listar_proyectos_por_estado_equipo(estado_equipo) do
-    equipos = Almacenamiento.listar_equipos()
     proyectos = Almacenamiento.listar_proyectos()
-
-    equipos_filtrados = Enum.filter(equipos, fn eq -> eq.estado == estado_equipo end)
-    nombres_equipos = Enum.map(equipos_filtrados, fn eq -> eq.nombre end)
-
-    Enum.filter(proyectos, fn proy -> proy.nombre_equipo in nombres_equipos end)
+    # Filtrar directamente por el estado_equipo almacenado en el proyecto
+    Enum.filter(proyectos, fn proy -> proy.estado_equipo == estado_equipo end)
   end
 
   defp listar_proyectos_por_categoria(categoria) do
@@ -157,13 +223,26 @@ defmodule Servicios.ServicioProyectos do
   # ========== API PÚBLICA ==========
 
   @doc """
-  Solicita crear un proyecto
+  Solicita crear un proyecto automáticamente
   """
-  def solicitar_crear(nombre_equipo, titulo, descripcion, categoria) do
-    send(@nombre_servicio, {self(), :crear, nombre_equipo, titulo, descripcion, categoria})
+  def solicitar_crear_automatico(nombre_equipo, categoria, estado_equipo \\ :activo) do
+    send(@nombre_servicio, {self(), :crear_automatico, nombre_equipo, categoria, estado_equipo})
 
     receive do
       {:proyecto_creado, resultado} -> resultado
+    after
+      5000 -> {:error, "Timeout"}
+    end
+  end
+
+  @doc """
+  Solicita actualizar detalles del proyecto
+  """
+  def solicitar_actualizar_detalles(nombre_equipo, titulo, descripcion) do
+    send(@nombre_servicio, {self(), :actualizar_detalles, nombre_equipo, titulo, descripcion})
+
+    receive do
+      {:proyecto_actualizado, resultado} -> resultado
     after
       5000 -> {:error, "Timeout"}
     end
@@ -183,13 +262,39 @@ defmodule Servicios.ServicioProyectos do
   end
 
   @doc """
-  Solicita agregar un avance
+  Solicita agregar un avance con notificación en tiempo real
   """
   def solicitar_agregar_avance(nombre_equipo, texto_avance) do
     send(@nombre_servicio, {self(), :agregar_avance, nombre_equipo, texto_avance})
 
     receive do
       {:avance_agregado, resultado} -> resultado
+    after
+      5000 -> {:error, "Timeout"}
+    end
+  end
+
+  @doc """
+  Solicita suscribirse a actualizaciones del proyecto
+  """
+  def solicitar_suscribir(nombre_equipo, pid_suscriptor \\ self()) do
+    send(@nombre_servicio, {self(), :suscribir, nombre_equipo, pid_suscriptor})
+
+    receive do
+      {:suscripcion, resultado} -> resultado
+    after
+      5000 -> {:error, "Timeout"}
+    end
+  end
+
+  @doc """
+  Solicita sincronizar el estado del equipo
+  """
+  def solicitar_sincronizar_estado(nombre_equipo, estado_equipo) do
+    send(@nombre_servicio, {self(), :sincronizar_estado_equipo, nombre_equipo, estado_equipo})
+
+    receive do
+      {:estado_sincronizado, resultado} -> resultado
     after
       5000 -> {:error, "Timeout"}
     end
@@ -212,7 +317,7 @@ defmodule Servicios.ServicioProyectos do
   Solicita listar proyectos filtrados por estado del equipo
   """
   def solicitar_listar_por_estado(estado_equipo) do
-    send(@nombre_servicio, {self(), :listar_por_estado, estado_equipo})
+    send(@nombre_servicio, {self(), :listar_por_estado_equipo, estado_equipo})
 
     receive do
       {:lista_proyectos, proyectos} -> proyectos

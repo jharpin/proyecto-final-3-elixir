@@ -34,8 +34,8 @@ defmodule Adaptadores.ProcesadorComandos do
           _ -> {:error, "Uso: /crear equipo <nombre> <tema>"}
         end
 
-      ["proyecto", info_proyecto] ->
-        {:crear_proyecto, info_proyecto}
+      ["proyecto", _info_proyecto] ->
+        {:error, "Los proyectos se crean automáticamente al crear un equipo"}
 
       _ -> {:error, "Comando /crear no reconocido"}
     end
@@ -103,6 +103,22 @@ defmodule Adaptadores.ProcesadorComandos do
     {:desactivar_equipo, nombre_equipo}
   end
 
+  # /actualizar proyecto <nombre_equipo> - Actualizar detalles del proyecto
+  defp procesar_comando(["/actualizar", resto]) do
+    case String.split(resto, " ", parts: 2) do
+      ["proyecto", nombre_equipo] ->
+        {:actualizar_proyecto, nombre_equipo}
+
+      _ ->
+        {:error, "Uso: /actualizar proyecto <nombre_equipo>"}
+    end
+  end
+
+  # /monitorear <nombre_equipo> - Monitorear proyecto en tiempo real
+  defp procesar_comando(["/monitorear", nombre_equipo]) do
+    {:monitorear_proyecto, nombre_equipo}
+  end
+
   # /ayuda - Mostrar ayuda
   defp procesar_comando(["/ayuda"]) do
     {:ayuda, nil}
@@ -141,7 +157,7 @@ GESTION DE EQUIPOS:
         Ver todos los equipos
 
   /crear equipo <nombre> <tema>
-        Crear un equipo nuevo
+        Crear un equipo nuevo (crea proyecto automáticamente)
 
   /unirse <equipo>
         Unirse a un equipo
@@ -157,17 +173,23 @@ GESTION DE PROYECTOS:
   /proyecto <equipo>
         Ver proyecto de un equipo
 
-  /avance <equipo>
-        Agregar avance al proyecto
+  /actualizar proyecto <equipo>
+        Actualizar detalles del proyecto (título y descripción)
 
-  /crear proyecto
-        Registrar proyecto del equipo
+  /avance <equipo>
+        Agregar avance al proyecto (notifica en tiempo real)
+
+  /monitorear <equipo>
+        Monitorear proyecto en tiempo real
 
   /listar proyectos
         Ver todos los proyectos
 
   /listar proyectos activos
         Ver proyectos de equipos activos
+
+  /listar proyectos inactivos
+        Ver proyectos de equipos inactivos
 
   /listar proyectos <categoria>
         Ver proyectos por categoria (Educacion, Ambiental, Social)
