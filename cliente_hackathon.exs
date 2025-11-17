@@ -401,7 +401,7 @@ defmodule ClienteHackathon do
           IO.puts("")
         end
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -410,12 +410,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:resultado_activar, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:resultado_activar, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\nError: #{msg}\n")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -424,12 +424,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:resultado_desactivar, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n#{msg}\n")
 
       {:resultado_desactivar, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\nError: #{msg}\n")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -440,7 +440,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "TODOS LOS PROYECTOS")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -451,7 +451,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "PROYECTOS DE EQUIPOS ACTIVOS")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -462,7 +462,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "PROYECTOS DE EQUIPOS INACTIVOS")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -473,7 +473,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "PROYECTOS - CATEGORÍA: #{categoria}")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -482,14 +482,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:info_proyecto, nil} ->
-        IO.puts("\n❌ No existe un proyecto para el equipo '#{nombre_equipo}'\n")
+        IO.puts("\nNo existe un proyecto para el equipo '#{nombre_equipo}'\n")
 
       {:info_proyecto, proyecto} ->
-        IO.puts("\n╔════════════════════════════════════════╗")
-        IO.puts("║      ACTUALIZAR PROYECTO               ║")
-        IO.puts("╚════════════════════════════════════════╝")
-        IO.puts("\n📌 Título actual: #{proyecto.titulo}")
-        IO.puts("📝 Descripción actual: #{proyecto.descripcion}\n")
+        IO.puts("\nactualizar proyecto")
+        IO.puts("\nTítulo actual: #{proyecto.titulo}")
+        IO.puts("Descripción actual: #{proyecto.descripcion}\n")
 
         nuevo_titulo = IO.gets("Nuevo título (Enter para mantener): ") |> String.trim()
         nueva_descripcion = IO.gets("Nueva descripción (Enter para mantener): ") |> String.trim()
@@ -501,15 +499,15 @@ defmodule ClienteHackathon do
 
         receive do
           {:proyecto_actualizado, {:ok, msg}} ->
-            IO.puts("\n✅ #{msg}\n")
+            IO.puts("\n#{msg}\n")
 
           {:proyecto_actualizado, {:error, msg}} ->
-            IO.puts("\n❌ Error: #{msg}\n")
+            IO.puts("\nError: #{msg}\n")
         after
-          5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+          5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
         end
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -518,9 +516,7 @@ defmodule ClienteHackathon do
 
     receive do
       {:suscripcion_confirmada, {:ok, _msg}} ->
-        IO.puts("\n╔════════════════════════════════════════╗")
-        IO.puts("║    📡 MONITOREANDO PROYECTO            ║")
-        IO.puts("╚════════════════════════════════════════╝")
+        IO.puts("monitoreo de proyecto")
         IO.puts("\nRecibirás notificaciones en tiempo real")
         IO.puts("Presiona Ctrl+C dos veces para detener\n")
 
