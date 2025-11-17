@@ -206,7 +206,7 @@ defmodule ClienteHackathon do
               IO.puts("#{miembro}")
             end)
 
-            IO.puts( <> String.duplicate("─", 40))
+            IO.puts( ""<> String.duplicate("─", 40))
           end)
 
           IO.puts("")
@@ -389,7 +389,7 @@ defmodule ClienteHackathon do
             IO.puts(" #{mentor.correo}")
             IO.puts("#{disponible}")
             IO.puts("Equipos asignados: #{length(mentor.equipos_asignados)}")
-            IO.puts(<> String.duplicate("─", 40))
+            IO.puts(""<> String.duplicate("─", 40))
           end)
 
           IO.puts("")
@@ -554,7 +554,7 @@ defmodule ClienteHackathon do
         IO.puts("Categoría: #{proyecto.categoria}")
         IO.puts("Estado: #{proyecto.estado}")
         IO.puts(" Avances: #{length(proyecto.avances)}")
-        IO.puts(<> String.duplicate("─", 40))
+        IO.puts(""<> String.duplicate("─", 40))
       end)
 
       IO.puts("")
