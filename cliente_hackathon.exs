@@ -288,35 +288,31 @@ defmodule ClienteHackathon do
   end
 
   defp manejar_agregar_avance_remoto(nombre_equipo) do
-    IO.puts("\n╔════════════════════════════════════════╗")
-    IO.puts("║         AGREGAR AVANCE                 ║")
-    IO.puts("╚════════════════════════════════════════╝")
+    IO.puts("\n agregar avance")
 
-    avance = IO.gets("\n📝 Describe el avance: ") |> String.trim()
+    avance = IO.gets("\nDescribe el avance: ") |> String.trim()
 
     send(@servidor_remoto, {self(), :agregar_avance, nombre_equipo, avance})
 
     receive do
       {:avance_agregado, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n#{msg}\n")
 
       {:avance_agregado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\nError: #{msg}\n")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
   defp manejar_chat_remoto(canal) do
-    nombre = IO.gets("\n👤 Ingresa tu nombre para el chat: ") |> String.trim()
+    nombre = IO.gets("\nIngresa tu nombre para el chat: ") |> String.trim()
 
     send(@servidor_remoto, {self(), :unirse_chat, canal, nombre})
 
     receive do
       {:chat_conectado, :ok} ->
-        IO.puts("\n╔════════════════════════════════════════╗")
-        IO.puts("║     💬 CHAT: #{String.pad_trailing(canal, 26)} ║")
-        IO.puts("╚════════════════════════════════════════╝")
+        IO.puts("chat #{String.pad_trailing(canal, 26)} ")
         IO.puts("Escribe /salir para volver al menú\n")
 
         # Registrar proceso principal para comunicación
@@ -330,9 +326,9 @@ defmodule ClienteHackathon do
         bucle_receptor_chat(canal, nombre, pid_lector, nombre_proceso)
 
       {:chat_conectado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\nError: #{msg}\n")
     after
-      5000 -> IO.puts("\n❌ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\nTimeout: el servidor no respondió\n")
     end
   end
 
@@ -371,7 +367,7 @@ defmodule ClienteHackathon do
         # Desregistrar
         Process.unregister(nombre_proceso)
 
-        IO.puts("\n👋 Saliste del chat '#{canal}'\n")
+        IO.puts("\nSaliste del chat '#{canal}'\n")
         :ok
     end
   end
@@ -382,20 +378,18 @@ defmodule ClienteHackathon do
     receive do
       {:lista_mentores, mentores} ->
         if Enum.empty?(mentores) do
-          IO.puts("\n📭 No hay mentores registrados.\n")
+          IO.puts("\nNo hay mentores registrados.\n")
         else
-          IO.puts("\n╔════════════════════════════════════════╗")
-          IO.puts("║        MENTORES DISPONIBLES            ║")
-          IO.puts("╚════════════════════════════════════════╝\n")
+            IO.puts("\n listar mentores\n")
 
           Enum.each(mentores, fn mentor ->
-            disponible = if mentor.disponible, do: "✅ Disponible", else: "⏸️ No disponible"
-            IO.puts("👨‍🏫 #{mentor.nombre}")
-            IO.puts("   🎓 Especialidad: #{mentor.especialidad}")
-            IO.puts("   📧 #{mentor.correo}")
-            IO.puts("   #{disponible}")
-            IO.puts("   👥 Equipos asignados: #{length(mentor.equipos_asignados)}")
-            IO.puts("   " <> String.duplicate("─", 40))
+            disponible = if mentor.disponible, do:
+            IO.puts(" #{mentor.nombre}")
+            IO.puts("Especialidad: #{mentor.especialidad}")
+            IO.puts(" #{mentor.correo}")
+            IO.puts("#{disponible}")
+            IO.puts("Equipos asignados: #{length(mentor.equipos_asignados)}")
+            IO.puts(<> String.duplicate("─", 40))
           end)
 
           IO.puts("")
