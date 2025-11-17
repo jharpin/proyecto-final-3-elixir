@@ -13,7 +13,7 @@ defmodule ClienteHackathon do
   alias Adaptadores.ProcesadorComandos
 
   # CONFIGURACIÓN - Modificar con la IP del servidor
-  @servidor_nodo :"servidor@192.168.1.56"
+  @servidor_nodo :"servidor@192.168.1.61"
   @servidor_remoto {:hackathon_server, @servidor_nodo}
 
   def main() do
@@ -227,9 +227,9 @@ defmodule ClienteHackathon do
           Enum.each(equipos, fn equipo ->
             estado_icono = if equipo.estado == :activo, do: "✅", else: "⏸️"
             IO.puts("#{estado_icono} #{equipo.nombre}")
-            IO.puts("   🎯 Tema: #{equipo.tema}")
-            IO.puts("   👑 Líder: #{equipo.lider}")
-            IO.puts("   👥 Miembros (#{length(equipo.miembros)}):")
+            IO.puts("    Tema: #{equipo.tema}")
+            IO.puts("    Líder: #{equipo.lider}")
+            IO.puts("    Miembros (#{length(equipo.miembros)}):")
 
             Enum.each(equipo.miembros, fn miembro ->
               IO.puts("      • #{miembro}")
@@ -254,7 +254,8 @@ defmodule ClienteHackathon do
       {:equipo_creado, {:ok, _equipo}} ->
         IO.puts("\n✅ Equipo '#{nombre}' creado exitosamente!")
         IO.puts("   🎯 Tema: #{tema}")
-        IO.puts("   👑 Líder: #{lider}\n")
+        IO.puts("   👑 Líder: #{lider}")
+        IO.puts("   📋 Proyecto creado automáticamente\n")
 
       {:equipo_creado, {:error, msg}} ->
         IO.puts("\n❌ Error: #{msg}\n")
@@ -349,8 +350,15 @@ defmodule ClienteHackathon do
         IO.puts("╚════════════════════════════════════════╝")
         IO.puts("Escribe /salir para volver al menú\n")
 
-        # Iniciar ciclo de chat
-        ciclo_chat(canal, nombre)
+        # Registrar proceso principal para comunicación
+        nombre_proceso = String.to_atom("chat_#{:erlang.unique_integer([:positive])}")
+        Process.register(self(), nombre_proceso)
+
+        # Spawn proceso lector
+        pid_lector = spawn(fn -> bucle_lectura_chat(canal, nombre, nombre_proceso) end)
+
+        # Bucle receptor
+        bucle_receptor_chat(canal, nombre, pid_lector, nombre_proceso)
 
       {:chat_conectado, {:error, msg}} ->
         IO.puts("\n❌ Error: #{msg}\n")
@@ -359,42 +367,42 @@ defmodule ClienteHackathon do
     end
   end
 
-  defp ciclo_chat(canal, nombre) do
-    # Proceso lector (input del usuario)
-    pid_lector = spawn(fn -> bucle_lectura_chat(canal, nombre) end)
-
-    # Proceso receptor (mensajes del servidor)
-    bucle_receptor_chat(canal, nombre, pid_lector)
-  end
-
-  defp bucle_lectura_chat(canal, nombre) do
+  defp bucle_lectura_chat(canal, nombre, nombre_proceso) do
     entrada = IO.gets("") |> String.trim()
 
     if entrada == "/salir" do
-      send(self(), :salir_chat)
+      send(nombre_proceso, :salir_chat)
+      :ok
     else
       send(@servidor_remoto, {self(), :enviar_mensaje_chat, canal, nombre, entrada})
-      bucle_lectura_chat(canal, nombre)
+      bucle_lectura_chat(canal, nombre, nombre_proceso)
     end
   end
 
-  defp bucle_receptor_chat(canal, nombre, pid_lector) do
+  defp bucle_receptor_chat(canal, nombre, pid_lector, nombre_proceso) do
     receive do
       {:mensaje_chat, autor, texto, timestamp} ->
         IO.puts("[#{timestamp}] #{autor}: #{texto}")
-        bucle_receptor_chat(canal, nombre, pid_lector)
+        bucle_receptor_chat(canal, nombre, pid_lector, nombre_proceso)
 
       :salir_chat ->
+        # Matar el proceso lector
         Process.exit(pid_lector, :kill)
+
+        # Notificar al servidor
         send(@servidor_remoto, {self(), :salir_chat, canal, nombre})
 
         receive do
           {:chat_desconectado, :ok} ->
-            IO.puts("\n👋 Saliste del chat '#{canal}'\n")
+            :ok
         after
-          1000 -> IO.puts("\n👋 Saliste del chat '#{canal}'\n")
+          500 -> :ok
         end
 
+        # Desregistrar
+        Process.unregister(nombre_proceso)
+
+        IO.puts("\n👋 Saliste del chat '#{canal}'\n")
         :ok
     end
   end
