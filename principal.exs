@@ -239,10 +239,10 @@ defmodule AplicacionHackathon do
       Enum.each(equipos, fn equipo ->
         estado_texto = if equipo.estado == :activo, do: "Activo", else: "Inactivo"
         IO.puts("Nombre: #{equipo.nombre}")
-        IO.puts("  Tema: #{equipo.tema}")
-        IO.puts("  Estado: #{estado_texto}")
-        IO.puts("  Lider: #{equipo.lider}")
-        IO.puts("  Miembros (#{length(equipo.miembros)}):")
+        IO.puts("Tema: #{equipo.tema}")
+        IO.puts("Estado: #{estado_texto}")
+        IO.puts("Lider: #{equipo.lider}")
+        IO.puts("Miembros (#{length(equipo.miembros)}):")
 
         Enum.each(equipo.miembros, fn miembro ->
           IO.puts("    - #{miembro}")
@@ -425,10 +425,10 @@ defmodule AplicacionHackathon do
 
         case ServicioProyectos.solicitar_actualizar_detalles(nombre_equipo, titulo_final, descripcion_final) do
           {:ok, msg} ->
-            IO.puts("\n ✅ #{msg}\n")
+            IO.puts("\n  #{msg}\n")
 
           {:error, msg} ->
-            IO.puts("\n ❌ Error: #{msg}\n")
+            IO.puts("\n Error: #{msg}\n")
         end
     end
   end
@@ -439,7 +439,7 @@ defmodule AplicacionHackathon do
         IO.puts("\n No existe un proyecto para el equipo '#{nombre_equipo}'\n")
 
       _proyecto ->
-        IO.puts("\n 📡 MONITOREANDO PROYECTO: #{nombre_equipo}")
+        IO.puts("\n MONITOREANDO PROYECTO: #{nombre_equipo}")
         IO.puts("--------------------------------")
         IO.puts("Recibirás notificaciones en tiempo real de los avances.")
         IO.puts("Presiona Ctrl+C dos veces para detener el monitoreo.\n")
@@ -450,7 +450,7 @@ defmodule AplicacionHackathon do
             ciclo_monitoreo(nombre_equipo)
 
           {:error, msg} ->
-            IO.puts("\n ❌ Error: #{msg}\n")
+            IO.puts("\n  Error: #{msg}\n")
         end
     end
   end
@@ -459,16 +459,16 @@ defmodule AplicacionHackathon do
     receive do
       {:actualizacion_proyecto, :nuevo_avance, ^nombre_equipo, datos} ->
         timestamp = datos.fecha |> Calendar.strftime("%H:%M:%S")
-        IO.puts("\n🚀 [#{timestamp}] NUEVO AVANCE DETECTADO!")
-        IO.puts("   #{datos.texto}")
-        IO.puts("   Total de avances: #{datos.total_avances}\n")
+        IO.puts("\n[#{timestamp}] NUEVO AVANCE DETECTADO!")
+        IO.puts("#{datos.texto}")
+        IO.puts("Total de avances: #{datos.total_avances}\n")
         ciclo_monitoreo(nombre_equipo)
 
       _ ->
         ciclo_monitoreo(nombre_equipo)
     after
       30000 ->
-        IO.puts("\n⏱️  Sin actividad por 30 segundos. Monitoreo activo...\n")
+        IO.puts("\nSin actividad por 30 segundos. Monitoreo activo...\n")
         ciclo_monitoreo(nombre_equipo)
     end
   end
@@ -481,7 +481,7 @@ defmodule AplicacionHackathon do
       IO.puts("-------")
 
       Enum.each(proyectos, fn proyecto ->
-        estado_equipo_texto = if proyecto.estado_equipo == :activo, do: "✅ Activo", else: "⏸️  Inactivo"
+        estado_equipo_texto = if proyecto.estado_equipo == :activo, do: 
         IO.puts("Proyecto: #{proyecto.titulo}")
         IO.puts("  Equipo: #{proyecto.nombre_equipo}")
         IO.puts("  Categoria: #{proyecto.categoria}")
