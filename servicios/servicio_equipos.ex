@@ -58,8 +58,6 @@ defmodule Servicios.ServicioEquipos do
     end
   end
 
-  # ========== FUNCIONES PRIVADAS ==========
-
   defp crear_equipo(nombre, tema, lider) do
     # Verificar si ya existe un equipo con ese nombre
     case Almacenamiento.obtener_equipo(nombre) do
@@ -173,9 +171,6 @@ defmodule Servicios.ServicioEquipos do
         {:ok, "Equipo #{estado_texto} correctamente"}
     end
   end
-
-  # ========== API PÚBLICA ==========
-
   @doc """
   Solicita crear un equipo nuevo
   """

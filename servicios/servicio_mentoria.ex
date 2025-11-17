@@ -53,8 +53,6 @@ defmodule Servicios.ServicioMentoria do
     end
   end
 
-  # ========== FUNCIONES PRIVADAS ==========
-
   defp registrar_mentor(nombre, correo, especialidad) do
     case Almacenamiento.obtener_mentor(nombre) do
       nil ->
@@ -124,9 +122,6 @@ defmodule Servicios.ServicioMentoria do
         end
     end
   end
-
-  # ========== API PÚBLICA ==========
-
   @doc """
   Solicita registrar un mentor
   """

@@ -90,8 +90,6 @@ defmodule Servicios.ServicioProyectos do
     end
   end
 
-  # ========== FUNCIONES PRIVADAS ==========
-
   defp crear_proyecto_automatico(nombre_equipo, categoria, estado_equipo) do
     # Verificar que el equipo existe
     case Almacenamiento.obtener_equipo(nombre_equipo) do
@@ -159,7 +157,7 @@ defmodule Servicios.ServicioProyectos do
 
         # Notificar al chat general
         timestamp = DateTime.utc_now() |> Calendar.strftime("%H:%M")
-        mensaje_notificacion = "[#{timestamp}] 🚀 El equipo #{nombre_equipo} ha registrado un nuevo avance"
+        mensaje_notificacion = "[#{timestamp}] El equipo #{nombre_equipo} ha registrado un nuevo avance"
 
         mensaje = %{
           canal: "general",
@@ -219,9 +217,6 @@ defmodule Servicios.ServicioProyectos do
     proyectos = Almacenamiento.listar_proyectos()
     Enum.filter(proyectos, fn proy -> proy.categoria == categoria end)
   end
-
-  # ========== API PÚBLICA ==========
-
   @doc """
   Solicita crear un proyecto automáticamente
   """

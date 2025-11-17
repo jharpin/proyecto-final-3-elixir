@@ -42,8 +42,7 @@ defmodule Servicios.ServicioChat do
         :ok
     end
   end
-
-  # ========== FUNCIONES PRIVADAS ==========
+#funciones privadas
 
   defp guardar_mensaje(canal, autor, texto) do
     mensaje = %{
@@ -57,7 +56,7 @@ defmodule Servicios.ServicioChat do
     {:ok, "Mensaje enviado"}
   end
 
-  # ========== API PÚBLICA ==========
+  # api
 
   @doc """
   Solicita enviar un mensaje a un canal
