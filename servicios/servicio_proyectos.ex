@@ -185,7 +185,7 @@ defmodule Servicios.ServicioProyectos do
 
         # Notificar al chat general
         timestamp = DateTime.utc_now() |> Calendar.strftime("%H:%M")
-        mensaje_notificacion = "[#{timestamp}] 📢 El equipo #{nombre_equipo} ha registrado un nuevo avance"
+        mensaje_notificacion = "[#{timestamp}]  El equipo #{nombre_equipo} ha registrado un nuevo avance"
 
         mensaje = %{
           canal: "general",
