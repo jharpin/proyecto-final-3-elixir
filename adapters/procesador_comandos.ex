@@ -26,7 +26,7 @@ defmodule Adaptadores.ProcesadorComandos do
   end
 
   # /equipos - Listar todos los equipos
-  defp procesar_comando(["/equipos"]) do
+  defp procesar_comando(["/teams"]) do
     {:listar_equipos, nil}
   end
 
@@ -48,12 +48,12 @@ defmodule Adaptadores.ProcesadorComandos do
   end
 
   # /listar proyectos - Listar todos los proyectos
-  defp procesar_comando(["/listar", "proyectos"]) do
+  defp procesar_comando(["/project ", "proyectos"]) do
     {:listar_proyectos, nil}
   end
 
   # /listar proyectos activos - Proyectos de equipos activos
-  defp procesar_comando(["/listar", resto]) do
+  defp procesar_comando(["/project ", resto]) do
     case String.split(resto, " ", parts: 2) do
       ["proyectos", "activos"] ->
         {:listar_proyectos_activos, nil}
@@ -65,12 +65,12 @@ defmodule Adaptadores.ProcesadorComandos do
         {:listar_proyectos_categoria, categoria}
 
       _ ->
-        {:error, "Comando /listar no reconocido"}
+        {:error, "Comando /project  no reconocido"}
     end
   end
 
   # /unirse <nombre_equipo>
-  defp procesar_comando(["/unirse", nombre_equipo]) do
+  defp procesar_comando(["/join", nombre_equipo]) do
     {:unirse_equipo, nombre_equipo}
   end
 
@@ -126,7 +126,7 @@ defmodule Adaptadores.ProcesadorComandos do
   end
 
   # /ayuda - Mostrar ayuda
-  defp procesar_comando(["/ayuda"]) do
+  defp procesar_comando(["/help"]) do
     {:ayuda, nil}
   end
 
@@ -145,12 +145,8 @@ defmodule Adaptadores.ProcesadorComandos do
   """
   def mostrar_ayuda() do
     """
-
-╔══════════════════════════════════════════════════════════════════╗
-║          COMANDOS DISPONIBLES - CODE4FUTURE HACKATHON           ║
-╚══════════════════════════════════════════════════════════════════╝
-
-📋 GESTIÓN DE PARTICIPANTES:
+COMANDOS DISPONIBLES HACKATHON CODE4FUTURE
+GESTIÓN DE PARTICIPANTES:
   /registrar
         Registrarse como participante en el sistema
 
@@ -161,15 +157,15 @@ defmodule Adaptadores.ProcesadorComandos do
         Ver todos los participantes registrados
 
 
-👥 GESTIÓN DE EQUIPOS:
-  /equipos
+GESTIÓN DE EQUIPOS:
+  /teams
         Ver todos los equipos
 
   /crear equipo <nombre> <tema>
         Crear un equipo nuevo
         Ejemplo: /crear equipo Innovadores Educacion
 
-  /unirse <equipo>
+  /join <equipo>
         Unirse a un equipo existente
 
   /activar <equipo>
@@ -179,12 +175,12 @@ defmodule Adaptadores.ProcesadorComandos do
         Desactivar un equipo
 
 
-📝 GESTIÓN DE PROYECTOS:
+GESTIÓN DE PROYECTOS:
   /crear proyecto <nombre_equipo>
         Crear proyecto para un equipo
         Ejemplo: /crear proyecto Innovadores
 
-  /proyecto <equipo>
+ /project <equipo>
         Ver detalles del proyecto de un equipo
 
   /actualizar proyecto <equipo>
@@ -210,7 +206,7 @@ defmodule Adaptadores.ProcesadorComandos do
         Categorías: Educacion, Ambiental, Social
 
 
-💬 COMUNICACIÓN:
+COMUNICACIÓN:
   /chat <equipo>
         Abrir chat del equipo
 
@@ -218,13 +214,13 @@ defmodule Adaptadores.ProcesadorComandos do
         Chat general de la hackathon
 
 
-👨‍🏫 MENTORÍA:
+MENTORÍA:
   /mentores
         Ver mentores disponibles
 
 
-⚙️  SISTEMA:
-  /ayuda
+SISTEMA:
+  /help 
         Mostrar esta ayuda
 
   /salir
