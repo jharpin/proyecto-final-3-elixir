@@ -88,8 +88,6 @@ defmodule Servicios.ServicioProyectos do
     end
   end
 
-  # ========== FUNCIONES PRIVADAS ==========
-
   defp crear_proyecto_manual(nombre_equipo, titulo, descripcion, categoria) do
     # Verificar que el equipo existe
     case Almacenamiento.obtener_equipo(nombre_equipo) do
@@ -245,8 +243,6 @@ defmodule Servicios.ServicioProyectos do
     proyectos = Almacenamiento.listar_proyectos()
     Enum.filter(proyectos, fn proy -> proy.categoria == categoria end)
   end
-
-  # ========== API PÚBLICA ==========
 
   @doc """
   Solicita crear un proyecto manualmente

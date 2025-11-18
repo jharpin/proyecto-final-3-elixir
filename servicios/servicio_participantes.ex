@@ -51,7 +51,6 @@ defmodule Servicios.ServicioParticipantes do
     end
   end
 
-  # ========== FUNCIONES PRIVADAS ==========
 
   defp registrar_participante(nombre, correo, rol) do
     # Verificar si ya existe
@@ -106,9 +105,6 @@ defmodule Servicios.ServicioParticipantes do
         end
     end
   end
-
-  # ========== API PÚBLICA ==========
-
   @doc """
   Solicita registrar un participante
   """

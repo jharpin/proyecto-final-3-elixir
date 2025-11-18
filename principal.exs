@@ -183,8 +183,6 @@ defmodule AplicacionHackathon do
     end
   end
 
-  # ========== MANEJADORES DE COMANDOS ==========
-
   defp manejar_registro() do
     IO.puts("\n REGISTRO DE PARTICIPANTE")
     IO.puts("--------------------")
@@ -481,7 +479,7 @@ defmodule AplicacionHackathon do
       IO.puts("-------")
 
       Enum.each(proyectos, fn proyecto ->
-        estado_equipo_texto = if proyecto.estado_equipo == :activo, do: 
+        estado_equipo_texto = if proyecto.estado_equipo == :activo, do:
         IO.puts("Proyecto: #{proyecto.titulo}")
         IO.puts("  Equipo: #{proyecto.nombre_equipo}")
         IO.puts("  Categoria: #{proyecto.categoria}")

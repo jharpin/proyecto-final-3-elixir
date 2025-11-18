@@ -1,7 +1,6 @@
 # servidor_hackathon.exs
 # SERVIDOR CENTRAL DE LA HACKATHON CODE4FUTURE
 
-# ========== CARGAR TODOS LOS MÓDULOS ==========
 Code.require_file("domain/participante.ex", __DIR__)
 Code.require_file("domain/equipo.ex", __DIR__)
 Code.require_file("domain/proyecto.ex", __DIR__)
@@ -28,7 +27,7 @@ defmodule ServidorHackathon do
 
   def main() do
 
-    IO.puts("║   SERVIDOR HACKATHON CODE4FUTURE - INICIADO  ")
+    IO.puts("   SERVIDOR HACKATHON CODE4FUTURE - INICIADO  ")
 
 
     Process.register(self(), @nombre_servicio)
@@ -80,7 +79,7 @@ defmodule ServidorHackathon do
 
   defp bucle_servidor(estado) do
     receive do
-      # ========== GESTIÓN DE PARTICIPANTES ==========
+
       {pid_cliente, :registrar_participante, nombre, correo, rol} ->
         log_peticion(pid_cliente, "Registrar participante: #{nombre}")
         resultado = ServicioParticipantes.solicitar_registrar(nombre, correo, rol)
@@ -93,7 +92,6 @@ defmodule ServidorHackathon do
         send(pid_cliente, {:lista_participantes, participantes})
         bucle_servidor(estado)
 
-      # ========== GESTIÓN DE EQUIPOS ==========
       {pid_cliente, :listar_equipos} ->
         log_peticion(pid_cliente, "Listar equipos")
         equipos = ServicioEquipos.solicitar_listar()

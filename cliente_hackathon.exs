@@ -22,7 +22,7 @@ defmodule ClienteHackathon do
   end
 
   defp mostrar_banner() do
-    IO.puts("\n=== CLIENTE HACKATHON CODE4FUTURE ===\n")
+    IO.puts("\nCLIENTE HACKATHON CODE4FUTURE\n")
   end
 
   defp conectar_servidor() do
@@ -148,7 +148,7 @@ defmodule ClienteHackathon do
   # ========== MANEJADORES DE COMANDOS REMOTOS ==========
 
   defp manejar_registro_remoto() do
-    IO.puts("\n=== REGISTRO DE PARTICIPANTE ===")
+    IO.puts("\n REGISTRO DE PARTICIPANTE ")
 
     nombre = IO.gets("\nNombre completo: ") |> String.trim()
     correo = IO.gets("Correo electrónico: ") |> String.trim()
@@ -169,7 +169,7 @@ defmodule ClienteHackathon do
   end
 
   defp manejar_registro_mentor_remoto() do
-    IO.puts("\n=== REGISTRO DE MENTOR ===")
+    IO.puts("\nREGISTRO DE MENTOR ")
 
     nombre = IO.gets("\nNombre completo: ") |> String.trim()
     correo = IO.gets("Correo electrónico: ") |> String.trim()
@@ -196,7 +196,7 @@ defmodule ClienteHackathon do
         if Enum.empty?(participantes) do
           IO.puts("\n No hay participantes registrados.\n")
         else
-          IO.puts("\n=== PARTICIPANTES REGISTRADOS ===\n")
+          IO.puts("\nPARTICIPANTES REGISTRADOS \n")
 
           Enum.each(participantes, fn p ->
             equipo = if p.equipo, do: p.equipo, else: "Sin equipo"
@@ -264,7 +264,7 @@ defmodule ClienteHackathon do
   end
 
   defp manejar_crear_proyecto_remoto(%{nombre_equipo: nombre_equipo}) do
-    IO.puts("\n=== CREAR PROYECTO PARA EQUIPO: #{nombre_equipo} ===")
+    IO.puts("\nCREAR PROYECTO PARA EQUIPO: #{nombre_equipo} ===")
 
     titulo = IO.gets("\nTítulo del proyecto: ") |> String.trim()
     descripcion = IO.gets("Descripción: ") |> String.trim()
@@ -374,7 +374,7 @@ defmodule ClienteHackathon do
 
     receive do
       {:chat_conectado, :ok} ->
-        IO.puts("\n=== CHAT: #{String.pad_trailing(canal, 26)} ===")
+        IO.puts("\nCHAT: #{String.pad_trailing(canal, 26)} ===")
         IO.puts("Escribe /salir para volver al menú\n")
 
         # Registrar proceso principal para comunicación
@@ -455,7 +455,7 @@ defmodule ClienteHackathon do
         if Enum.empty?(mentores) do
           IO.puts("\n No hay mentores registrados.\n")
         else
-          IO.puts("\n=== MENTORES DISPONIBLES ===\n")
+          IO.puts("\nMENTORES DISPONIBLES \n")
 
           Enum.each(mentores, fn mentor ->
             disponible = if mentor.disponible, do: " Disponible", else: " No disponible"
@@ -620,7 +620,7 @@ defmodule ClienteHackathon do
     if Enum.empty?(proyectos) do
       IO.puts("\n No hay proyectos para mostrar.\n")
     else
-      IO.puts("\n=== #{String.pad_trailing(titulo, 38)} ===\n")
+      IO.puts("\n #{String.pad_trailing(titulo, 38)} \n")
 
       Enum.each(proyectos, fn proyecto ->
         estado_icono = if proyecto.estado_equipo == :activo, do: "si", else: "no"

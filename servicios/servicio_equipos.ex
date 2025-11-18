@@ -176,8 +176,6 @@ defmodule Servicios.ServicioEquipos do
     end
   end
 
-  # ========== API PÚBLICA ==========
-
   @doc """
   Solicita crear un equipo nuevo
   """
