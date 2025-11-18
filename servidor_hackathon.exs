@@ -27,40 +27,40 @@ defmodule ServidorHackathon do
   @nombre_servicio :hackathon_server
 
   def main() do
-    IO.puts("\n╔══════════════════════════════════════════════════════╗")
-    IO.puts("║   SERVIDOR HACKATHON CODE4FUTURE - INICIADO ✅      ║")
-    IO.puts("╚══════════════════════════════════════════════════════╝\n")
+
+    IO.puts("║   SERVIDOR HACKATHON CODE4FUTURE - INICIADO  ")
+
 
     Process.register(self(), @nombre_servicio)
 
     # Inicializar todos los servicios
-    IO.puts("⚙️  Iniciando servicios...")
+    IO.puts("  Iniciando servicios...")
     {:ok, _} = Almacenamiento.iniciar()
-    IO.puts("   ✅ Almacenamiento")
+    IO.puts("    Almacenamiento")
 
     {:ok, _} = ServicioParticipantes.iniciar()
-    IO.puts("   ✅ Servicio de Participantes")
+    IO.puts("    Servicio de Participantes")
 
     {:ok, _} = ServicioEquipos.iniciar()
-    IO.puts("   ✅ Servicio de Equipos")
+    IO.puts("    Servicio de Equipos")
 
     {:ok, _} = ServicioProyectos.iniciar()
-    IO.puts("   ✅ Servicio de Proyectos")
+    IO.puts("    Servicio de Proyectos")
 
     {:ok, _} = ServicioMentoria.iniciar()
-    IO.puts("   ✅ Servicio de Mentoría")
+    IO.puts("    Servicio de Mentoría")
 
     cargar_datos_ejemplo()
 
-    IO.puts("\n🚀 Todos los servicios activos")
-    IO.puts("📡 Esperando conexiones de clientes...")
-    IO.puts("🌐 Nodo: #{Node.self()}\n")
+    IO.puts("\n Todos los servicios activos")
+    IO.puts(" Esperando conexiones de clientes...")
+    IO.puts(" Nodo: #{Node.self()}\n")
 
     bucle_servidor(%{clientes_chat: %{}})
   end
 
   defp cargar_datos_ejemplo() do
-    IO.puts("\n📦 Cargando datos de ejemplo...")
+    IO.puts("\n Cargando datos de ejemplo...")
 
     # Crear participantes
     ServicioParticipantes.solicitar_registrar("Juan Pérez", "juan@hackathon.com", :participante)
@@ -75,7 +75,7 @@ defmodule ServidorHackathon do
     ServicioMentoria.solicitar_registrar("Dr. Carlos Ruiz", "carlos@hackathon.com", "Inteligencia Artificial")
     ServicioMentoria.solicitar_registrar("Ing. Ana López", "ana@hackathon.com", "Desarrollo Web")
 
-    IO.puts("   ✅ Datos de ejemplo cargados")
+    IO.puts(" Datos de ejemplo cargados")
   end
 
   defp bucle_servidor(estado) do
@@ -208,17 +208,19 @@ defmodule ServidorHackathon do
         send(pid_cliente, {:chat_conectado, :ok})
 
         # LOG en servidor
-        IO.puts(IO.ANSI.green() <> "[CHAT] 👤 #{nombre_usuario} se unió al canal '#{canal}'" <> IO.ANSI.reset())
+        IO.puts(IO.ANSI.green() <> "[CHAT]  #{nombre_usuario} se unió al canal '#{canal}'" <> IO.ANSI.reset())
 
         # Notificar a otros en el canal
-        broadcast_chat(nuevo_estado, canal, "Sistema", "👋 #{nombre_usuario} se ha unido al chat", pid_cliente)
+        broadcast_chat(nuevo_estado, canal, "Sistema", " #{nombre_usuario} se ha unido al chat", pid_cliente)
         bucle_servidor(nuevo_estado)
 
-      {_pid_cliente, :enviar_mensaje_chat, canal, autor, texto} ->
+      {pid_cliente, :enviar_mensaje_chat, canal, autor, texto} ->
         # LOG en servidor
         timestamp = obtener_timestamp()
         IO.puts(IO.ANSI.cyan() <> "[#{timestamp}][CHAT:#{canal}] #{autor}: #{texto}" <> IO.ANSI.reset())
-        broadcast_chat(estado, canal, autor, texto, nil)
+
+        # Broadcast a TODOS excepto al que envió el mensaje
+        broadcast_chat(estado, canal, autor, texto, pid_cliente)
         bucle_servidor(estado)
 
       {pid_cliente, :salir_chat, canal, nombre_usuario} ->
@@ -226,15 +228,15 @@ defmodule ServidorHackathon do
         nuevo_estado = desregistrar_cliente_chat(estado, canal, pid_cliente)
 
         # LOG en servidor
-        IO.puts(IO.ANSI.yellow() <> "[CHAT] 👋 #{nombre_usuario} salió del canal '#{canal}'" <> IO.ANSI.reset())
+        IO.puts(IO.ANSI.yellow() <> "[CHAT]  #{nombre_usuario} salió del canal '#{canal}'" <> IO.ANSI.reset())
 
-        broadcast_chat(nuevo_estado, canal, "Sistema", "👋 #{nombre_usuario} ha salido del chat", pid_cliente)
+        broadcast_chat(nuevo_estado, canal, "Sistema", " #{nombre_usuario} ha salido del chat", pid_cliente)
         send(pid_cliente, {:chat_desconectado, :ok})
         bucle_servidor(nuevo_estado)
 
       # ========== MENSAJE DESCONOCIDO ==========
       mensaje ->
-        IO.puts("⚠️  Mensaje no reconocido: #{inspect(mensaje)}")
+        IO.puts("  Mensaje no reconocido: #{inspect(mensaje)}")
         bucle_servidor(estado)
     end
   end
@@ -243,7 +245,7 @@ defmodule ServidorHackathon do
 
   defp log_peticion(pid_cliente, accion) do
     timestamp = obtener_timestamp()
-    IO.puts("[#{timestamp}] 📨 Cliente #{inspect(pid_cliente)}: #{accion}")
+    IO.puts("[#{timestamp}]  Cliente #{inspect(pid_cliente)}: #{accion}")
   end
 
   defp obtener_timestamp() do

@@ -30,19 +30,19 @@ defmodule ClienteHackathon do
 
     case Node.connect(@servidor_nodo) do
       true ->
-        IO.puts("✅ Conectado exitosamente al servidor")
-        IO.puts("📝 Escribe /ayuda para ver los comandos disponibles\n")
+        IO.puts(" Conectado exitosamente al servidor")
+        IO.puts(" Escribe /ayuda para ver los comandos disponibles\n")
         ciclo_principal()
 
       false ->
-        IO.puts("❌ No se pudo conectar al servidor")
+        IO.puts(" No se pudo conectar al servidor")
         IO.puts("Verifica que:")
         IO.puts("  1. El servidor esté ejecutándose")
         IO.puts("  2. La IP sea correcta: #{@servidor_nodo}")
         IO.puts("  3. La cookie sea la misma: hackathon_secret\n")
 
       :ignored ->
-        IO.puts("✅ Ya estabas conectado al servidor")
+        IO.puts(" Ya estabas conectado al servidor")
         ciclo_principal()
     end
   end
@@ -52,7 +52,7 @@ defmodule ClienteHackathon do
 
     case ProcesadorComandos.parsear(entrada) do
       {:salir, _} ->
-        IO.puts("\n👋 Gracias por usar el sistema.\n")
+        IO.puts("\n Gracias por usar el sistema.\n")
         :ok
 
       {:ayuda, _} ->
@@ -136,11 +136,11 @@ defmodule ClienteHackathon do
         ciclo_principal()
 
       {:desconocido, _} ->
-        IO.puts("❌ Comando no reconocido. Usa /ayuda para ver los comandos disponibles.")
+        IO.puts(" Comando no reconocido. Usa /ayuda para ver los comandos disponibles.")
         ciclo_principal()
 
       {:error, msg} ->
-        IO.puts("❌ Error: #{msg}")
+        IO.puts(" Error: #{msg}")
         ciclo_principal()
     end
   end
@@ -159,12 +159,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:respuesta_registro, {:ok, _participante}} ->
-        IO.puts("\n✅ Registro exitoso. ¡Bienvenido #{nombre}!\n")
+        IO.puts("\n Registro exitoso. ¡Bienvenido #{nombre}!\n")
 
       {:respuesta_registro, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -179,12 +179,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:mentor_registrado, {:ok, _mentor}} ->
-        IO.puts("\n✅ Mentor registrado exitosamente. ¡Bienvenido #{nombre}!\n")
+        IO.puts("\n Mentor registrado exitosamente. ¡Bienvenido #{nombre}!\n")
 
       {:mentor_registrado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -194,22 +194,22 @@ defmodule ClienteHackathon do
     receive do
       {:lista_participantes, participantes} ->
         if Enum.empty?(participantes) do
-          IO.puts("\n⚠️ No hay participantes registrados.\n")
+          IO.puts("\n No hay participantes registrados.\n")
         else
           IO.puts("\n=== PARTICIPANTES REGISTRADOS ===\n")
 
           Enum.each(participantes, fn p ->
             equipo = if p.equipo, do: p.equipo, else: "Sin equipo"
-            IO.puts("👤 #{p.nombre}")
-            IO.puts("   📧 #{p.correo}")
-            IO.puts("   👥 Equipo: #{equipo}")
+            IO.puts(" #{p.nombre}")
+            IO.puts("    #{p.correo}")
+            IO.puts("    Equipo: #{equipo}")
             IO.puts("   " <> String.duplicate("─", 40))
           end)
 
           IO.puts("")
         end
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -219,16 +219,16 @@ defmodule ClienteHackathon do
     receive do
       {:lista_equipos, equipos} ->
         if Enum.empty?(equipos) do
-          IO.puts("\n⚠️ No hay equipos registrados.\n")
+          IO.puts("\n No hay equipos registrados.\n")
         else
           IO.puts("\n=== EQUIPOS REGISTRADOS ===\n")
 
           Enum.each(equipos, fn equipo ->
-            estado_icono = if equipo.estado == :activo, do: "✅", else: "❌"
+            estado_icono = if equipo.estado == :activo, do: "si", else: "no"
             IO.puts("#{estado_icono} #{equipo.nombre}")
-            IO.puts("   📚 Tema: #{equipo.tema}")
-            IO.puts("   👑 Líder: #{equipo.lider}")
-            IO.puts("   👥 Miembros (#{length(equipo.miembros)}):")
+            IO.puts("    Tema: #{equipo.tema}")
+            IO.puts("    Líder: #{equipo.lider}")
+            IO.puts("    Miembros (#{length(equipo.miembros)}):")
 
             Enum.each(equipo.miembros, fn miembro ->
               IO.puts("      • #{miembro}")
@@ -240,26 +240,26 @@ defmodule ClienteHackathon do
           IO.puts("")
         end
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
   defp manejar_crear_equipo_remoto(%{nombre: nombre, tema: tema}) do
-    lider = IO.gets("\n👑 Ingresa tu nombre (líder del equipo): ") |> String.trim()
+    lider = IO.gets("\n Ingresa tu nombre (líder del equipo): ") |> String.trim()
 
     send(@servidor_remoto, {self(), :crear_equipo, nombre, tema, lider})
 
     receive do
       {:equipo_creado, {:ok, _equipo}} ->
-        IO.puts("\n✅ Equipo '#{nombre}' creado exitosamente!")
-        IO.puts("   📚 Tema: #{tema}")
-        IO.puts("   👑 Líder: #{lider}")
-        IO.puts("\n💡 Ahora puedes crear el proyecto con: /crear proyecto #{nombre}\n")
+        IO.puts("\n Equipo '#{nombre}' creado exitosamente!")
+        IO.puts("    Tema: #{tema}")
+        IO.puts("    Líder: #{lider}")
+        IO.puts("\n Ahora puedes crear el proyecto con: /crear proyecto #{nombre}\n")
 
       {:equipo_creado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -286,30 +286,30 @@ defmodule ClienteHackathon do
 
     receive do
       {:proyecto_creado, {:ok, _proyecto}} ->
-        IO.puts("\n✅ Proyecto creado exitosamente!")
-        IO.puts("   📝 Título: #{titulo}")
-        IO.puts("   📚 Categoría: #{categoria}\n")
+        IO.puts("\n Proyecto creado exitosamente!")
+        IO.puts("    Título: #{titulo}")
+        IO.puts("    Categoría: #{categoria}\n")
 
       {:proyecto_creado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
   defp manejar_unirse_equipo_remoto(nombre_equipo) do
-    nombre = IO.gets("\n👤 Ingresa tu nombre: ") |> String.trim()
+    nombre = IO.gets("\n Ingresa tu nombre: ") |> String.trim()
 
     send(@servidor_remoto, {self(), :unirse_equipo, nombre_equipo, nombre})
 
     receive do
       {:resultado_unirse, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:resultado_unirse, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -318,18 +318,18 @@ defmodule ClienteHackathon do
 
     receive do
       {:info_proyecto, nil} ->
-        IO.puts("\n❌ No existe un proyecto para el equipo '#{nombre_equipo}'\n")
+        IO.puts("\n No existe un proyecto para el equipo '#{nombre_equipo}'\n")
 
       {:info_proyecto, proyecto} ->
         IO.puts("\n=== PROYECTO: #{String.pad_trailing(proyecto.titulo, 23)} ===")
-        IO.puts("\n👥 Equipo: #{proyecto.nombre_equipo}")
-        IO.puts("📚 Categoría: #{proyecto.categoria}")
-        IO.puts("📊 Estado: #{proyecto.estado}")
-        IO.puts("\n📝 Descripción:")
+        IO.puts("\n Equipo: #{proyecto.nombre_equipo}")
+        IO.puts(" Categoría: #{proyecto.categoria}")
+        IO.puts(" Estado: #{proyecto.estado}")
+        IO.puts("\n Descripción:")
         IO.puts("#{proyecto.descripcion}")
 
         if length(proyecto.avances) > 0 do
-          IO.puts("\n📈 Avances (#{length(proyecto.avances)}):")
+          IO.puts("\n Avances (#{length(proyecto.avances)}):")
           Enum.each(proyecto.avances, fn avance ->
             fecha = Calendar.strftime(avance.fecha, "%Y-%m-%d %H:%M")
             IO.puts("   [#{fecha}] #{avance.texto}")
@@ -337,7 +337,7 @@ defmodule ClienteHackathon do
         end
 
         if length(proyecto.retroalimentacion) > 0 do
-          IO.puts("\n💬 Retroalimentación:")
+          IO.puts("\n Retroalimentación:")
           Enum.each(proyecto.retroalimentacion, fn retro ->
             IO.puts("   [#{retro.mentor}]: #{retro.comentario}")
           end)
@@ -345,30 +345,30 @@ defmodule ClienteHackathon do
 
         IO.puts("")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
   defp manejar_agregar_avance_remoto(nombre_equipo) do
     IO.puts("\n=== AGREGAR AVANCE ===")
 
-    avance = IO.gets("\n📝 Describe el avance: ") |> String.trim()
+    avance = IO.gets("\n Describe el avance: ") |> String.trim()
 
     send(@servidor_remoto, {self(), :agregar_avance, nombre_equipo, avance})
 
     receive do
       {:avance_agregado, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:avance_agregado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
   defp manejar_chat_remoto(canal) do
-    nombre = IO.gets("\n👤 Ingresa tu nombre para el chat: ") |> String.trim()
+    nombre = IO.gets("\n Ingresa tu nombre para el chat: ") |> String.trim()
 
     send(@servidor_remoto, {self(), :unirse_chat, canal, nombre})
 
@@ -388,9 +388,9 @@ defmodule ClienteHackathon do
         bucle_receptor_chat(canal, nombre, pid_lector, nombre_proceso)
 
       {:chat_conectado, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -417,7 +417,7 @@ defmodule ClienteHackathon do
     receive do
       {:mensaje_chat, autor, texto, timestamp} ->
         # DEBUG: Descomentar para ver todos los mensajes que llegan
-        # IO.puts("[DEBUG] Recibido mensaje - Autor: #{autor}, Mi nombre: #{nombre}, Igual?: #{autor == nombre}")
+         #IO.puts("[DEBUG] Recibido mensaje - Autor: #{autor}, Mi nombre: #{nombre}, Igual?: #{autor == nombre}")
 
         # Solo mostrar si NO es nuestro propio mensaje
         if autor != nombre do
@@ -442,7 +442,7 @@ defmodule ClienteHackathon do
         # Desregistrar
         Process.unregister(nombre_proceso)
 
-        IO.puts("\n👋 Saliste del chat '#{canal}'\n")
+        IO.puts("\n Saliste del chat '#{canal}'\n")
         :ok
     end
   end
@@ -453,24 +453,24 @@ defmodule ClienteHackathon do
     receive do
       {:lista_mentores, mentores} ->
         if Enum.empty?(mentores) do
-          IO.puts("\n⚠️ No hay mentores registrados.\n")
+          IO.puts("\n No hay mentores registrados.\n")
         else
           IO.puts("\n=== MENTORES DISPONIBLES ===\n")
 
           Enum.each(mentores, fn mentor ->
-            disponible = if mentor.disponible, do: "✅ Disponible", else: "❌ No disponible"
-            IO.puts("👨‍🏫 #{mentor.nombre}")
-            IO.puts("   🎓 Especialidad: #{mentor.especialidad}")
-            IO.puts("   📧 #{mentor.correo}")
+            disponible = if mentor.disponible, do: " Disponible", else: " No disponible"
+            IO.puts(" #{mentor.nombre}")
+            IO.puts("    Especialidad: #{mentor.especialidad}")
+            IO.puts("    #{mentor.correo}")
             IO.puts("   #{disponible}")
-            IO.puts("   👥 Equipos asignados: #{length(mentor.equipos_asignados)}")
+            IO.puts("    Equipos asignados: #{length(mentor.equipos_asignados)}")
             IO.puts("   " <> String.duplicate("─", 40))
           end)
 
           IO.puts("")
         end
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -479,12 +479,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:resultado_activar, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:resultado_activar, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -493,12 +493,12 @@ defmodule ClienteHackathon do
 
     receive do
       {:resultado_desactivar, {:ok, msg}} ->
-        IO.puts("\n✅ #{msg}\n")
+        IO.puts("\n #{msg}\n")
 
       {:resultado_desactivar, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -509,7 +509,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "TODOS LOS PROYECTOS")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -520,7 +520,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "PROYECTOS DE EQUIPOS ACTIVOS")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -531,7 +531,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "PROYECTOS DE EQUIPOS INACTIVOS")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -542,7 +542,7 @@ defmodule ClienteHackathon do
       {:lista_proyectos, proyectos} ->
         mostrar_lista_proyectos(proyectos, "PROYECTOS - CATEGORÍA: #{categoria}")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -551,7 +551,7 @@ defmodule ClienteHackathon do
 
     receive do
       {:info_proyecto, nil} ->
-        IO.puts("\n❌ No existe un proyecto para el equipo '#{nombre_equipo}'\n")
+        IO.puts("\n No existe un proyecto para el equipo '#{nombre_equipo}'\n")
 
       {:info_proyecto, proyecto} ->
         IO.puts("\n=== ACTUALIZAR PROYECTO ===")
@@ -568,15 +568,15 @@ defmodule ClienteHackathon do
 
         receive do
           {:proyecto_actualizado, {:ok, msg}} ->
-            IO.puts("\n✅ #{msg}\n")
+            IO.puts("\n #{msg}\n")
 
           {:proyecto_actualizado, {:error, msg}} ->
-            IO.puts("\n❌ Error: #{msg}\n")
+            IO.puts("\n Error: #{msg}\n")
         after
-          5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+          5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
         end
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -592,9 +592,9 @@ defmodule ClienteHackathon do
         ciclo_monitoreo(nombre_equipo)
 
       {:suscripcion_confirmada, {:error, msg}} ->
-        IO.puts("\n❌ Error: #{msg}\n")
+        IO.puts("\n Error: #{msg}\n")
     after
-      5000 -> IO.puts("\n⏱️ Timeout: el servidor no respondió\n")
+      5000 -> IO.puts("\n Timeout: el servidor no respondió\n")
     end
   end
 
@@ -602,33 +602,33 @@ defmodule ClienteHackathon do
     receive do
       {:actualizacion_proyecto, :nuevo_avance, ^nombre_equipo, datos} ->
         timestamp = datos.fecha |> Calendar.strftime("%H:%M:%S")
-        IO.puts("\n🔔 [#{timestamp}] NUEVO AVANCE DETECTADO!")
+        IO.puts("\n [#{timestamp}] NUEVO AVANCE DETECTADO!")
         IO.puts("   #{datos.texto}")
-        IO.puts("   📊 Total de avances: #{datos.total_avances}\n")
+        IO.puts("    Total de avances: #{datos.total_avances}\n")
         ciclo_monitoreo(nombre_equipo)
 
       _ ->
         ciclo_monitoreo(nombre_equipo)
     after
       30000 ->
-        IO.puts("⏳ Sin actividad por 30 segundos. Monitoreo activo...")
+        IO.puts(" Sin actividad por 30 segundos. Monitoreo activo...")
         ciclo_monitoreo(nombre_equipo)
     end
   end
 
   defp mostrar_lista_proyectos(proyectos, titulo) do
     if Enum.empty?(proyectos) do
-      IO.puts("\n⚠️ No hay proyectos para mostrar.\n")
+      IO.puts("\n No hay proyectos para mostrar.\n")
     else
       IO.puts("\n=== #{String.pad_trailing(titulo, 38)} ===\n")
 
       Enum.each(proyectos, fn proyecto ->
-        estado_icono = if proyecto.estado_equipo == :activo, do: "✅", else: "❌"
+        estado_icono = if proyecto.estado_equipo == :activo, do: "si", else: "no"
         IO.puts("#{estado_icono} #{proyecto.titulo}")
-        IO.puts("   👥 Equipo: #{proyecto.nombre_equipo}")
-        IO.puts("   📚 Categoría: #{proyecto.categoria}")
-        IO.puts("   📊 Estado: #{proyecto.estado}")
-        IO.puts("   📈 Avances: #{length(proyecto.avances)}")
+        IO.puts("    Equipo: #{proyecto.nombre_equipo}")
+        IO.puts("    Categoría: #{proyecto.categoria}")
+        IO.puts("    Estado: #{proyecto.estado}")
+        IO.puts("    Avances: #{length(proyecto.avances)}")
         IO.puts("   " <> String.duplicate("─", 40))
       end)
 
