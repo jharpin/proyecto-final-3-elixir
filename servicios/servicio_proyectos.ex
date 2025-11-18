@@ -2,7 +2,7 @@ defmodule Servicios.ServicioProyectos do
   @moduledoc """
   Servicio para gestionar proyectos de los equipos.
   Maneja registro de ideas, avances y retroalimentación.
-  Los proyectos se crean automáticamente al crear un equipo.
+  Los proyectos se crean MANUALMENTE con el comando /crear proyecto.
   Soporta actualizaciones en tiempo real mediante suscripciones.
   """
 
@@ -20,14 +20,12 @@ defmodule Servicios.ServicioProyectos do
     {:ok, pid}
   end
 
-  @doc """
-  Ciclo principal que recibe mensajes
-  """
+  # Ciclo principal que recibe mensajes
   defp ciclo() do
     receive do
-      # Crear proyecto automáticamente
-      {remitente, :crear_automatico, nombre_equipo, categoria, estado_equipo} ->
-        resultado = crear_proyecto_automatico(nombre_equipo, categoria, estado_equipo)
+      # Crear proyecto MANUALMENTE
+      {remitente, :crear, nombre_equipo, titulo, descripcion, categoria} ->
+        resultado = crear_proyecto_manual(nombre_equipo, titulo, descripcion, categoria)
         send(remitente, {:proyecto_creado, resultado})
         ciclo()
 
@@ -90,24 +88,53 @@ defmodule Servicios.ServicioProyectos do
     end
   end
 
-  defp crear_proyecto_automatico(nombre_equipo, categoria, estado_equipo) do
+  # ========== FUNCIONES PRIVADAS ==========
+
+  defp crear_proyecto_manual(nombre_equipo, titulo, descripcion, categoria) do
     # Verificar que el equipo existe
     case Almacenamiento.obtener_equipo(nombre_equipo) do
       nil ->
-        {:error, "El equipo no existe"}
+        {:error, "El equipo no existe. Crea el equipo primero con /crear equipo"}
 
-      _equipo ->
+      equipo ->
         # Verificar si ya tiene proyecto
         case Almacenamiento.obtener_proyecto(nombre_equipo) do
           nil ->
-            proyecto = Proyecto.nuevo(nombre_equipo, categoria, estado_equipo)
-            Almacenamiento.guardar_proyecto(proyecto)
-            {:ok, proyecto}
+            # Validar categoría
+            categorias_validas = ["Educacion", "Ambiental", "Social"]
+
+            if categoria not in categorias_validas do
+              {:error, "Categoría inválida. Usa: #{Enum.join(categorias_validas, ", ")}"}
+            else
+              proyecto = %Dominio.Proyecto{
+                id: generar_id(),
+                nombre_equipo: nombre_equipo,
+                titulo: titulo,
+                descripcion: descripcion,
+                categoria: categoria,
+                estado: :registrado,
+                estado_equipo: equipo.estado,
+                avances: [],
+                retroalimentacion: [],
+                suscriptores: [],
+                fecha_registro: DateTime.utc_now(),
+                fecha_actualizacion: DateTime.utc_now()
+              }
+
+              Almacenamiento.guardar_proyecto(proyecto)
+              {:ok, proyecto}
+            end
 
           _proyecto ->
             {:error, "Este equipo ya tiene un proyecto registrado"}
         end
     end
+  end
+
+  defp generar_id() do
+    :crypto.strong_rand_bytes(8)
+    |> Base.encode16()
+    |> String.downcase()
   end
 
   defp actualizar_detalles_proyecto(nombre_equipo, titulo, descripcion) do
@@ -125,7 +152,8 @@ defmodule Servicios.ServicioProyectos do
   defp sincronizar_estado(nombre_equipo, estado_equipo) do
     case Almacenamiento.obtener_proyecto(nombre_equipo) do
       nil ->
-        {:error, "No existe un proyecto para este equipo"}
+        # No hay proyecto, no hay nada que sincronizar
+        :ok
 
       proyecto ->
         proyecto_actualizado = Proyecto.sincronizar_estado_equipo(proyecto, estado_equipo)
@@ -137,7 +165,7 @@ defmodule Servicios.ServicioProyectos do
   defp agregar_avance_tiempo_real(nombre_equipo, texto_avance) do
     case Almacenamiento.obtener_proyecto(nombre_equipo) do
       nil ->
-        {:error, "No existe un proyecto para este equipo"}
+        {:error, "No existe un proyecto para este equipo. Créalo con /crear proyecto"}
 
       proyecto ->
         # Agregar el avance
@@ -157,7 +185,7 @@ defmodule Servicios.ServicioProyectos do
 
         # Notificar al chat general
         timestamp = DateTime.utc_now() |> Calendar.strftime("%H:%M")
-        mensaje_notificacion = "[#{timestamp}] El equipo #{nombre_equipo} ha registrado un nuevo avance"
+        mensaje_notificacion = "[#{timestamp}] 📢 El equipo #{nombre_equipo} ha registrado un nuevo avance"
 
         mensaje = %{
           canal: "general",
@@ -217,11 +245,14 @@ defmodule Servicios.ServicioProyectos do
     proyectos = Almacenamiento.listar_proyectos()
     Enum.filter(proyectos, fn proy -> proy.categoria == categoria end)
   end
+
+  # ========== API PÚBLICA ==========
+
   @doc """
-  Solicita crear un proyecto automáticamente
+  Solicita crear un proyecto manualmente
   """
-  def solicitar_crear_automatico(nombre_equipo, categoria, estado_equipo \\ :activo) do
-    send(@nombre_servicio, {self(), :crear_automatico, nombre_equipo, categoria, estado_equipo})
+  def solicitar_crear(nombre_equipo, titulo, descripcion, categoria) do
+    send(@nombre_servicio, {self(), :crear, nombre_equipo, titulo, descripcion, categoria})
 
     receive do
       {:proyecto_creado, resultado} -> resultado
@@ -322,7 +353,7 @@ defmodule Servicios.ServicioProyectos do
   end
 
   @doc """
-  Solicita listar proyectos filtrados por categoria
+  Solicita listar proyectos filtrados por categoría
   """
   def solicitar_listar_por_categoria(categoria) do
     send(@nombre_servicio, {self(), :listar_por_categoria, categoria})

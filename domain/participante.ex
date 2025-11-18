@@ -36,9 +36,7 @@ defmodule Dominio.Participante do
     end
   end
 
-  @doc """
-  Valida que el correo contenga @
-  """
+  # Valida que el correo contenga @
   defp validar_correo(correo) do
     if String.contains?(correo, "@") do
       :ok

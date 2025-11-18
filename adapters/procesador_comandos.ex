@@ -20,12 +20,18 @@ defmodule Adaptadores.ProcesadorComandos do
     {:registrar, nil}
   end
 
+  # /registrar-mentor - Registrar nuevo mentor
+  defp procesar_comando(["/registrar-mentor"]) do
+    {:registrar_mentor, nil}
+  end
+
   # /equipos - Listar todos los equipos
   defp procesar_comando(["/equipos"]) do
     {:listar_equipos, nil}
   end
 
   # /crear equipo <nombre> <tema>
+  # /crear proyecto <nombre_equipo>
   defp procesar_comando(["/crear", resto]) do
     case String.split(resto, " ", parts: 2) do
       ["equipo", info_equipo] ->
@@ -34,10 +40,10 @@ defmodule Adaptadores.ProcesadorComandos do
           _ -> {:error, "Uso: /crear equipo <nombre> <tema>"}
         end
 
-      ["proyecto", _info_proyecto] ->
-        {:error, "Los proyectos se crean automáticamente al crear un equipo"}
+      ["proyecto", nombre_equipo] ->
+        {:crear_proyecto, %{nombre_equipo: nombre_equipo}}
 
-      _ -> {:error, "Comando /crear no reconocido"}
+      _ -> {:error, "Comando /crear no reconocido. Usa: /crear equipo o /crear proyecto"}
     end
   end
 
@@ -140,27 +146,31 @@ defmodule Adaptadores.ProcesadorComandos do
   def mostrar_ayuda() do
     """
 
- COMANDOS DISPONIBLES
-        CODE4FUTURE
+╔══════════════════════════════════════════════════════════════════╗
+║          COMANDOS DISPONIBLES - CODE4FUTURE HACKATHON           ║
+╚══════════════════════════════════════════════════════════════════╝
 
-
-GESTION DE PARTICIPANTES:
+📋 GESTIÓN DE PARTICIPANTES:
   /registrar
-        Registrarse en el sistema
+        Registrarse como participante en el sistema
+
+  /registrar-mentor
+        Registrarse como mentor
 
   /participantes
-        Ver todos los participantes
+        Ver todos los participantes registrados
 
 
-GESTION DE EQUIPOS:
+👥 GESTIÓN DE EQUIPOS:
   /equipos
         Ver todos los equipos
 
   /crear equipo <nombre> <tema>
-        Crear un equipo nuevo (crea proyecto automáticamente)
+        Crear un equipo nuevo
+        Ejemplo: /crear equipo Innovadores Educacion
 
   /unirse <equipo>
-        Unirse a un equipo
+        Unirse a un equipo existente
 
   /activar <equipo>
         Activar un equipo
@@ -169,12 +179,16 @@ GESTION DE EQUIPOS:
         Desactivar un equipo
 
 
-GESTION DE PROYECTOS:
+📝 GESTIÓN DE PROYECTOS:
+  /crear proyecto <nombre_equipo>
+        Crear proyecto para un equipo
+        Ejemplo: /crear proyecto Innovadores
+
   /proyecto <equipo>
-        Ver proyecto de un equipo
+        Ver detalles del proyecto de un equipo
 
   /actualizar proyecto <equipo>
-        Actualizar detalles del proyecto (título y descripción)
+        Actualizar título y descripción del proyecto
 
   /avance <equipo>
         Agregar avance al proyecto (notifica en tiempo real)
@@ -192,10 +206,11 @@ GESTION DE PROYECTOS:
         Ver proyectos de equipos inactivos
 
   /listar proyectos <categoria>
-        Ver proyectos por categoria (Educacion, Ambiental, Social)
+        Ver proyectos por categoría
+        Categorías: Educacion, Ambiental, Social
 
 
-COMUNICACION:
+💬 COMUNICACIÓN:
   /chat <equipo>
         Abrir chat del equipo
 
@@ -203,12 +218,12 @@ COMUNICACION:
         Chat general de la hackathon
 
 
-MENTORIA:
+👨‍🏫 MENTORÍA:
   /mentores
         Ver mentores disponibles
 
 
-SISTEMA:
+⚙️  SISTEMA:
   /ayuda
         Mostrar esta ayuda
 

@@ -18,9 +18,7 @@ defmodule Servicios.ServicioMentoria do
     {:ok, pid}
   end
 
-  @doc """
-  Ciclo principal
-  """
+  # Ciclo principal
   defp ciclo() do
     receive do
       {remitente, :registrar, nombre, correo, especialidad} ->
@@ -52,6 +50,8 @@ defmodule Servicios.ServicioMentoria do
         :ok
     end
   end
+
+  # ========== FUNCIONES PRIVADAS ==========
 
   defp registrar_mentor(nombre, correo, especialidad) do
     case Almacenamiento.obtener_mentor(nombre) do
@@ -122,6 +122,9 @@ defmodule Servicios.ServicioMentoria do
         end
     end
   end
+
+  # ========== API PÚBLICA ==========
+
   @doc """
   Solicita registrar un mentor
   """

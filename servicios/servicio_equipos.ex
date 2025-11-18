@@ -18,9 +18,7 @@ defmodule Servicios.ServicioEquipos do
     {:ok, pid}
   end
 
-  @doc """
-  Ciclo principal del servicio
-  """
+  # Ciclo principal del servicio
   defp ciclo() do
     receive do
       {remitente, :crear, nombre, tema, lider} ->
@@ -58,6 +56,8 @@ defmodule Servicios.ServicioEquipos do
     end
   end
 
+  # ========== FUNCIONES PRIVADAS ==========
+
   defp crear_equipo(nombre, tema, lider) do
     # Verificar si ya existe un equipo con ese nombre
     case Almacenamiento.obtener_equipo(nombre) do
@@ -68,21 +68,21 @@ defmodule Servicios.ServicioEquipos do
 
         cond do
           participante_lider == nil ->
-            {:error, "El lider del equipo debe ser un participante registrado"}
+            {:error, "El líder del equipo debe ser un participante registrado"}
 
           participante_lider.equipo != nil ->
-            {:error, "El lider ya pertenece al equipo '#{participante_lider.equipo}'"}
+            {:error, "El líder ya pertenece al equipo '#{participante_lider.equipo}'"}
 
           true ->
             equipo = Equipo.nuevo(nombre, tema, lider)
             Almacenamiento.guardar_equipo(equipo)
 
-            # CRUCIAL: Actualizar el participante líder con el equipo asignado
+            # Actualizar el participante líder con el equipo asignado
             participante_actualizado = Dominio.Participante.asignar_equipo(participante_lider, nombre)
             Almacenamiento.guardar_participante(participante_actualizado)
 
-            # NUEVO: Crear proyecto automáticamente
-            Servicios.ServicioProyectos.solicitar_crear_automatico(nombre, tema, equipo.estado)
+            # YA NO SE CREA PROYECTO AUTOMÁTICAMENTE
+            # El usuario debe usar /crear proyecto <nombre_equipo>
 
             {:ok, equipo}
         end
@@ -164,13 +164,20 @@ defmodule Servicios.ServicioEquipos do
         equipo_actualizado = Equipo.cambiar_estado(equipo, nuevo_estado)
         Almacenamiento.guardar_equipo(equipo_actualizado)
 
-        # NUEVO: Sincronizar el estado con el proyecto
-        Servicios.ServicioProyectos.solicitar_sincronizar_estado(nombre_equipo, nuevo_estado)
+        # Sincronizar el estado con el proyecto (si existe)
+        proyecto = Almacenamiento.obtener_proyecto(nombre_equipo)
+        if proyecto do
+          proyecto_actualizado = Dominio.Proyecto.sincronizar_estado_equipo(proyecto, nuevo_estado)
+          Almacenamiento.guardar_proyecto(proyecto_actualizado)
+        end
 
         estado_texto = if nuevo_estado == :activo, do: "activado", else: "desactivado"
         {:ok, "Equipo #{estado_texto} correctamente"}
     end
   end
+
+  # ========== API PÚBLICA ==========
+
   @doc """
   Solicita crear un equipo nuevo
   """

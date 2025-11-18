@@ -18,9 +18,7 @@ defmodule Servicios.ServicioParticipantes do
     {:ok, pid}
   end
 
-  @doc """
-  Ciclo principal que recibe y procesa mensajes
-  """
+  # Ciclo principal que recibe y procesa mensajes
   defp ciclo() do
     receive do
       {remitente, :registrar, nombre, correo, rol} ->
@@ -52,6 +50,8 @@ defmodule Servicios.ServicioParticipantes do
         :ok
     end
   end
+
+  # ========== FUNCIONES PRIVADAS ==========
 
   defp registrar_participante(nombre, correo, rol) do
     # Verificar si ya existe
@@ -106,6 +106,8 @@ defmodule Servicios.ServicioParticipantes do
         end
     end
   end
+
+  # ========== API PÚBLICA ==========
 
   @doc """
   Solicita registrar un participante
